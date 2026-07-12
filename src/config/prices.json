@@ -1,0 +1,7 @@
+{
+  "anthropic/claude-3.5-sonnet": { "in_per_m": 3.00, "out_per_m": 15.00 },
+  "gpt-4o": { "in_per_m": 5.00, "out_per_m": 15.00 },
+  "gemini-1.5-flash": { "in_per_m": 0.00, "out_per_m": 0.00 },
+  "gemini-2.0-flash": { "in_per_m": 0.00, "out_per_m": 0.00 },
+  "mock": { "in_per_m": 0.00, "out_per_m": 0.00 }
+}

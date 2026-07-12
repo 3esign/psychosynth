@@ -1,0 +1,42 @@
+{
+  "name": "psychosynth",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "buyer-test": "npx tsx scripts/buyer-test.ts",
+    "export:sft": "npx tsx scripts/export-sft.ts",
+    "export:dpo": "npx tsx scripts/export-dpo.ts",
+    "export:reject-cls": "npx tsx scripts/export-reject-cls.ts",
+    "export:demand": "npx tsx scripts/export-demand.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.12",
+    "@ai-sdk/google": "^4.0.12",
+    "@ai-sdk/openai": "^4.0.11",
+    "@supabase/ssr": "^0.12.0",
+    "@supabase/supabase-js": "^2.110.2",
+    "ai": "^7.0.22",
+    "ajv": "^8.20.0",
+    "next": "16.2.10",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "viem": "^2.55.0",
+    "x402-fetch": "^1.2.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.10",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
