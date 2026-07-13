@@ -20,7 +20,7 @@ const ollama = createOpenAI({
   apiKey: 'ollama', // requires a dummy key
 });
 
-const providers: Record<string, (m: string) => any> = {
+export const providers: Record<string, (m: string) => any> = {
   anthropic: (m) => anthropic(m),
   openai: (m) => openai(m),
   google: (m) => google(m),

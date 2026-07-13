@@ -3,13 +3,15 @@ import { schemaValidate } from './schema_validate';
 import { dedup } from './dedup';
 import { provenanceStamp } from './provenance';
 import { route } from './route';
+import { llmJudge } from './llm_judge';
 import type { Hook, HookContext, HookResult } from './types';
 
 const REGISTRY: Record<string, Hook> = {
   schema_validate: schemaValidate,
   dedup,
   provenance_stamp: provenanceStamp,
-  route
+  route,
+  llm_judge: llmJudge
 };
 
 export async function runHookChain(
