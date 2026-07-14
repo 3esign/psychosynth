@@ -4,6 +4,63 @@ import { err, toResponse } from '@/modules/core/errors';
 import { emit } from '@/modules/learning/events';
 import { rateLimit } from '@/modules/core/rate_limiter';
 
+// Free, deterministic preview: a fixed, reproducible slice of a product's
+// records so a buyer can verify shape and quality before paying. Determinism
+// matters — the same product must always return the same preview rows.
+// Dispatches on recipe.entity, mirroring resolveQuery's entity switch (this
+// was previously hardcoded to profiles, so any non-profile product's preview
+// returned the wrong data entirely).
+
+function previewLimit(pct: number, total: number) {
+  return Math.min(25, Math.ceil((Number(pct) || 0.05) * total));
+}
+
+async function previewProfiles(pct: number) {
+  // Deterministic, stable slice: order by id (immutable, always present) so the
+  // same product always returns the same preview rows.
+  //
+  // Previously this ordered by an embedded provenance(sha256_content) join. That
+  // embed is unnecessary for a stable preview and is fragile: if the provenance
+  // relationship is missing/ambiguous in a given environment, PostgREST 500s the
+  // whole preview. The paid profile query never joins provenance, so dropping it
+  // here also makes preview and paid output shapes match more closely.
+  const { data, error } = await dbAdmin.from('profiles')
+    .select('id, version, big_five, mbti_label, decision_style, summary, tags')
+    .eq('status', 'approved')
+    .order('id');
+  if (error) throw err('internal', 500, error.message);
+
+  const rows = data ?? [];
+  return rows.slice(0, previewLimit(pct, rows.length));
+}
+
+async function previewBiases(pct: number) {
+  // Biases are a small fixed taxonomy; slug order is deterministic.
+  const { data, error } = await dbAdmin.from('biases')
+    .select('id, slug, name, description, source, examples, mitigations')
+    .order('slug');
+  if (error) throw err('internal', 500, error.message);
+
+  const rows = data ?? [];
+  return rows.slice(0, previewLimit(pct, rows.length));
+}
+
+async function previewScenarioResponses(pct: number) {
+  // Same record shape the paid query returns, so a buyer can verify exactly
+  // what they'd receive. Ordered by id for a stable, reproducible slice.
+  const { data, error } = await dbAdmin.from('profile_scenario_responses')
+    .select(`
+      id, response, reasoning_chain, emotional_arc, confidence,
+      scenarios!inner(slug, category, title, description),
+      profiles(id, mbti_label, decision_style, big_five)
+    `)
+    .order('id');
+  if (error) throw err('internal', 500, error.message);
+
+  const rows = data ?? [];
+  return rows.slice(0, previewLimit(pct, rows.length));
+}
+
 export async function GET(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
@@ -12,7 +69,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
     }
     const { slug } = await params;
     const { data: product } = await dbAdmin.from('products')
-      .select('id, preview_pct, status')
+      .select('id, preview_pct, status, recipes(query_rules)')
       .eq('slug', slug)
       .single();
 
@@ -20,37 +77,35 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
       throw err('not_found', 404, 'Product not found or inactive');
     }
 
-    // Fetch approved profiles and join with provenance
-    const { data: profiles, error } = await dbAdmin.from('profiles')
-      .select('id, version, big_five, mbti_label, decision_style, summary, tags, provenance(sha256_content)')
-      .eq('status', 'approved');
-
-    if (error) throw err('internal', 500, error.message);
-
-    // Sort deterministically by sha256_content
-    const sorted = (profiles ?? []).map(p => {
-      const provs = p.provenance as any;
-      const sha = Array.isArray(provs) ? provs[0]?.sha256_content : provs?.sha256_content;
-      return { ...p, sha256_content: sha || '' };
-    }).sort((a, b) => a.sha256_content.localeCompare(b.sha256_content));
-
-    const totalCount = sorted.length;
+    const entity = (product.recipes as any)?.query_rules?.entity ?? 'profile';
     const pct = Number(product.preview_pct) || 0.05;
-    const limit = Math.min(25, Math.ceil(pct * totalCount));
-    
-    const sliced = sorted.slice(0, limit).map(({ sha256_content, provenance, ...rest }) => rest);
+
+    let records: any[];
+    switch (entity) {
+      case 'profile':
+        records = await previewProfiles(pct);
+        break;
+      case 'bias':
+        records = await previewBiases(pct);
+        break;
+      case 'scenario_response':
+        records = await previewScenarioResponses(pct);
+        break;
+      default:
+        throw err('internal', 500, `unsupported entity: ${entity}`);
+    }
 
     emit({
       event_type: 'preview.served',
       actor_type: 'system',
-      payload: { product_slug: slug, count: sliced.length }
+      payload: { product_slug: slug, count: records.length }
     });
 
     return NextResponse.json({
       product: slug,
       preview: true,
-      count: sliced.length,
-      records: sliced
+      count: records.length,
+      records
     });
 
   } catch (e) { return toResponse(e); }

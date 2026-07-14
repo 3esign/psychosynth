@@ -1,7 +1,19 @@
+import * as path from 'path';
+import * as fs from 'fs';
 import { createPublicClient, createWalletClient, http, publicActions } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { base } from 'viem/chains';
 import { wrapFetchWithPayment } from 'x402-fetch';
+
+function loadEnv() {
+  const p = path.join(process.cwd(), '.env');
+  if (!fs.existsSync(p)) return;
+  for (const line of fs.readFileSync(p, 'utf8').split('\n')) {
+    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+    if (m) process.env[m[1]] = m[2].trim().replace(/^["']|["']$/g, '');
+  }
+}
+loadEnv();
 
 const privateKey = process.env.TEST_BUYER_PRIVATE_KEY;
 const targetUrl = process.argv[2] || 'http://localhost:3000/api/v1/query/personality-profile-library?tags=trading&limit=2';
