@@ -1,47 +1,130 @@
 # Psychosynth
 
-Synthetic psychometric data, generated and human-curated in an internal Lab, sold to autonomous agents over the x402 protocol (USDC on Base). Every record is versioned, schema-validated, and carries a cryptographic provenance chain. All data is synthetic — `synthetic: true` in every paid payload.
+[![Build Status](https://github.com/3esign/cfaces/actions/workflows/build.yml/badge.svg)](https://github.com/3esign/cfaces/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Payments: x402](https://img.shields.io/badge/Payments-x402%20Base-blue)](https://github.com/3esign/cfaces)
+[![MCP: Supported](https://img.shields.io/badge/MCP-Supported-green)](https://modelcontextprotocol.io)
 
-## Architecture at a glance
+Psychosynth is an agent-native, on-chain psychometric data marketplace. It delivers high-variance, human-curated personality profiles and profile-conditioned behavioral responses to autonomous systems. Settle transactions query-by-query in USDC on Base using the **x402 micro-payment protocol**—completely free of human intermediaries.
 
-- **Generator OS** — generators are database rows (prompt template + params schema + output schema + hook chain + model config), not code. New methodology = new version row.
-- **Hooks pipeline** — every generated item passes `schema_validate → dedup (pg_trgm) → provenance_stamp → route` before reaching a human.
-- **The Lab** (`/lab`) — admin UI: run generators, keyboard-driven curation queue (A/R/E/J/K), data browser with provenance drawer, system metrics.
-- **Learning Loop** — every run, hook execution, curation decision, and buyer query lands in append-only `events` / `curation_decisions` tables; export scripts turn them into SFT/DPO/classifier datasets.
-- **Payments** — custom EIP-3009 gate in `src/proxy.ts` (Next 16 middleware): buyer signs a gasless USDC `TransferWithAuthorization`; we verify off-chain, settle on-chain from a settlement wallet, and serve data in the same request.
+---
 
-## Setup
+## System Architecture
 
-1. `npm install`
-2. Copy `.env.example` → `.env` and fill every variable (see comments in the file).
-3. Apply migrations + seed: `npx supabase db push` (migrations `0001`–`0005`), then run `supabase/seed.sql`.
-4. `npm run dev`
+```mermaid
+graph TD
+    A["Generator OS (DB Templates)"] --> B["LLM Synthesis (Flash/Sonnet)"]
+    B --> C["Hooks Pipeline (validation & dedup)"]
+    C --> D["Curation Queue (Review Desk)"]
+    D --> E["Supabase DB Store"]
+    E --> F["x402 Proxy Middleware (Base)"]
+    F --> G["JSON API / MCP Server"]
+    G --> H["Autonomous Agents (Eliza, OpenClaw, Hermes)"]
+```
 
-## API surface
+---
 
-| Route | Auth | Purpose |
-|---|---|---|
-| `GET /api/v1/products` | free, rate-limited | catalog |
-| `GET /api/v1/preview/:slug` | free, rate-limited | deterministic sample (lowest content hashes) |
-| `GET /api/v1/query/:slug` | x402 payment | full records with filters |
-| `GET /api/health` | free | DB connectivity check |
-| `/api/lab/*` | admin session | generators, runs, queue, decisions, entities, products, stats |
-| `/docs`, `/methodology/:slug` | free | buyer documentation, per-generator methodology |
+## Core Capabilities
 
-Admin access: Supabase email/password login at `/lab/login`, allowlisted via `ADMIN_EMAILS`.
+### 1. v2 Psychometric Engine
+Standard LLMs suffer from "average-model bias," producing homogeneous, risk-neutral responses in games and simulations. Psychosynth resolves this by delivering structured, high-variance datasets containing:
+- **Five-Factor Model (OCEAN)**: Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism.
+- **Dark Triad Traits**: Machiavellianism, Narcissism, and Psychopathy.
+- **Prospect Theory Posture**: Loss aversion coefficients ($\lambda$) and power utility exponents for gains ($\alpha$) and losses ($\beta$).
+- **Cognitive Reflection**: System 1 (heuristic-driven) vs. System 2 (logical/deliberative) preferences, alongside Cognitive Reflection Test (CRT) scores.
 
-## Scripts
+### 2. Agent-Native Payments (x402)
+Transactions settle query-by-query on the Base blockchain using the x402 standard:
+- **Gasless Settlement**: Agents use their EVM wallets to sign gasless `TransferWithAuthorization` payloads (EIP-3009) in USDC.
+- **Proxy Middleware**: The backend verifies the signature, broadcasts the settlement on-chain, and delivers the requested dataset in a single HTTP request loop.
 
-- `npm run buyer-test` — end-to-end paid query against a running instance (needs `TEST_BUYER_PRIVATE_KEY` with USDC on Base).
-- `npm run export:sft | export:dpo | export:reject-cls | export:demand` — training-data and demand exports into `exports/`.
-- `npm run typecheck` — `tsc --noEmit`.
+### 3. Model Context Protocol (MCP) Server
+Psychosynth exposes an MCP server to connect directly with autonomous agent runtimes.
+- **Supported Frameworks**: ElizaOS, OpenClaw (via MCPorter), and Nous Research's Hermes Agent.
+- **Exposed Tools**:
+  - `list_products`: Discover available products, schemas, and pricing.
+  - `preview_records`: Fetch free, deterministic samples to verify schema shape.
+  - `get_quote`: Request an x402 payment quote without executing transactions.
+  - `query_records`: Execute on-chain payments and retrieve full data payloads.
 
-## Known M1 limitations (deliberate, documented)
+---
 
-- Rate limiting is in-memory per serverless instance (catalog/preview only) — upgrade path is a distributed store (e.g. Upstash Redis).
-- Batch generation runs inside Vercel's `after()` window; keep batch counts modest (≤ ~25) or move to a worker/queue for larger runs.
-- Payment settlement waits for on-chain receipt before serving (fail-closed by design; adds ~2s latency per paid call).
+## Setup & Installation
 
-## Docs
+### Prerequisites
+- Node.js >= 18
+- Supabase CLI (optional, for local DB development)
 
-Strategy and specs live in `docs/` (MASTERPLAN → DEVELOPMENT → IMPLEMENTATION → M1_COMPLETION_PLAN). Superseded brainstorms are in `docs/archive/`.
+### Quick Start
+1. Clone the repository and install dependencies:
+   ```bash
+   git clone https://github.com/3esign/cfaces.git
+   cd cfaces
+   npm install
+   ```
+
+2. Configure environment variables:
+   ```bash
+   cp .env.example .env
+   # Fill in Supabase keys, X402 payout address, and keys.
+   ```
+
+3. Deploy Supabase migrations and seed data:
+   ```bash
+   npx supabase db push
+   # Seeds the base schema and version 2 generators
+   ```
+
+4. Launch the Next.js development server:
+   ```bash
+   npm run dev
+   ```
+
+---
+
+## MCP Server Configuration
+
+To register the Psychosynth MCP server with your local agent, add the following entry to your MCP client config (e.g. `claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "psychosynth": {
+      "command": "node",
+      "args": ["d:/Projekti/faces/mcp/dist/index.js"],
+      "env": {
+        "PSYCHOSYNTH_API_URL": "https://psychosynth.vercel.app",
+        "BUYER_PRIVATE_KEY": "0xYourBuyerWalletPrivateKey",
+        "BASE_RPC_URL": "https://mainnet.base.org"
+      }
+    }
+  }
+}
+```
+
+---
+
+## CLI & Scripts
+
+- `npm run typecheck` — Runs TypeScript compiler checks without emitting files.
+- `npm run buyer-test` — Simulates an end-to-end paid query against a running instance.
+- `npm run export:sft | export:dpo | export:reject-cls` — Exports curation data into training formats.
+
+---
+
+## Documentation
+
+Full architectural specifications, master plans, and developer logs reside in the `docs/` folder:
+- [MASTERPLAN.md](file:///d:/Projekti/faces/docs/MASTERPLAN.md) — Product vision and economic structures.
+- [DISCOVERY.md](file:///d:/Projekti/faces/docs/DISCOVERY.md) — Framework-specific agent integration details.
+- [DEVELOPMENT.md](file:///d:/Projekti/faces/docs/DEVELOPMENT.md) — Detailed engineering specs and database schema designs.
+
+---
+
+## Bankr Ecosystem Integration
+
+Psychosynth speaks **standard x402**: agents sign a gasless USDC EIP-3009 `TransferWithAuthorization` on Base and the server settles it via an x402 facilitator (the facilitator broadcasts and pays gas). This is the payment shape Bankr platform wallets, `x402-fetch`, and most agent wallet layers produce automatically. Self-settled `txHash` payments (Base or Solana) remain supported as a fallback.
+
+- **Free agent preflight**: `GET /api/v1/discovery` — products, live prices, tiers, payTo, and settlement methods in one call.
+- **Bankr skill**: the submission package for the [BankrBot/skills](https://github.com/BankrBot/skills) catalog lives in [`integrations/bankr-skills/psychosynth/`](integrations/bankr-skills/psychosynth/) (SKILL.md + catalog.json + logo + references + scripts). Once merged it surfaces on [skills.bankr.bot](https://skills.bankr.bot) and installs with: `install the psychosynth skill from https://github.com/BankrBot/skills/tree/main/psychosynth`.
+- **Positioning**: existing intelligence skills in that ecosystem analyze tokens; Psychosynth sells synthetic *behavioral* data — priors about how market participants act — for trading sims, counterparty modeling, and agent stress-testing.

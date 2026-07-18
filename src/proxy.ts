@@ -1,48 +1,20 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createPublicClient, createWalletClient, http, hexToSignature, verifyTypedData, getAddress } from 'viem';
-import { privateKeyToAccount } from 'viem/accounts';
-import { base } from 'viem/chains';
 import { dbAdmin } from '@/modules/core/db';
-
-const usdcContractAddress = getAddress('0x833589fcd6edb6e08f4c7c32d4f71b54bda02913');
-
-const usdcAbi = [
-  {
-    name: 'transferWithAuthorization',
-    type: 'function',
-    stateMutability: 'external',
-    inputs: [
-      { name: 'from', type: 'address' },
-      { name: 'to', type: 'address' },
-      { name: 'value', type: 'uint256' },
-      { name: 'validAfter', type: 'uint256' },
-      { name: 'validBefore', type: 'uint256' },
-      { name: 'nonce', type: 'bytes32' },
-      { name: 'v', type: 'uint8' },
-      { name: 'r', type: 'bytes32' },
-      { name: 's', type: 'bytes32' },
-    ],
-    outputs: [],
-  }
-] as const;
-
-const rpcUrl = process.env.BASE_RPC_URL || 'https://mainnet.base.org';
-
-const publicClient = createPublicClient({
-  chain: base,
-  transport: http(rpcUrl),
-});
-
-const payoutAddress = getAddress(process.env.X402_PAYOUT_ADDRESS!);
-const settlementPrivateKey = process.env.SETTLEMENT_PRIVATE_KEY!;
-
-const settlementAccount = privateKeyToAccount(settlementPrivateKey as `0x${string}`);
-const walletClient = createWalletClient({
-  account: settlementAccount,
-  chain: base,
-  transport: http(rpcUrl),
-});
+import { emit } from '@/modules/learning/events';
+import { rateLimit, clientIp } from '@/modules/core/rate_limiter';
+import { selectTier, listTiers } from '@/modules/commerce/pricing';
+import {
+  verifyPayment,
+  PaymentError,
+  httpStatusFor,
+  evmPayoutAddress,
+  solanaPayoutAddress,
+  usdcContractAddress,
+  usdcSolanaMint,
+  bindingRequired,
+  bindingChallengeTemplate,
+} from '@/modules/commerce/payment-verify';
 
 function safeBase64Decode(data: string): string {
   if (typeof globalThis !== 'undefined' && typeof globalThis.atob === 'function') {
@@ -51,9 +23,80 @@ function safeBase64Decode(data: string): string {
   return Buffer.from(data, 'base64').toString('utf-8');
 }
 
+function microUsdc(amountUsdc: number): bigint {
+  return BigInt(Math.round(amountUsdc * 1_000_000)); // USDC: 6 decimals
+}
+
 export async function proxy(request: NextRequest) {
   // Only paywall /api/v1/query/:path*
   if (request.nextUrl.pathname.startsWith('/api/v1/query/')) {
+    const slug = request.nextUrl.pathname.replace('/api/v1/query/', '').split('/')[0];
+
+    // Throttle BEFORE any catalog lookup or on-chain RPC. Verifying a payment
+    // fires several Base/Solana RPC calls; without this an attacker could send a
+    // flood of well-formed-but-bogus X-PAYMENT headers and amplify each cheap
+    // request into expensive RPC work (cost / DoS). Keyed on the trusted client
+    // IP, shared with the public read limiter.
+    if (!(await rateLimit(clientIp(request)))) {
+      return NextResponse.json(
+        { error: { code: 'too_many_requests', message: 'Rate limit exceeded. Max 60 requests per minute.', details: {} } },
+        { status: 429 },
+      );
+    }
+
+    // Price (and existence) come from the product row.
+    let product: any = null;
+    try {
+      const r = await dbAdmin
+        .from('products')
+        .select('slug, name, description, status, price_model')
+        .eq('slug', slug)
+        .maybeSingle();
+      product = r.data;
+    } catch {
+      return NextResponse.json(
+        { error: { code: 'infra', message: 'Catalog lookup failed', details: {} } },
+        { status: 503 },
+      );
+    }
+
+    if (!product || product.status !== 'live') {
+      return NextResponse.json(
+        { error: { code: 'not_found', message: 'Product not found or inactive', details: {} } },
+        { status: 404 },
+      );
+    }
+
+    // Which tier this request is buying (base per-query, or a bulk pack via
+    // ?tier=<slug>). The query route resolves the same tier, so the amount we
+    // quote and verify here matches the rows served there.
+    const tier = selectTier(product.price_model, request.nextUrl.searchParams);
+    const amountUsdc = tier.amountUsdc;
+    const requiredUnits = microUsdc(amountUsdc);
+
+    if (requiredUnits <= BigInt(0)) {
+      // Never fall through to a $0 quote — that would serve data for free.
+      return NextResponse.json(
+        { error: { code: 'misconfig', message: 'Product price is not configured', details: {} } },
+        { status: 500 },
+      );
+    }
+
+    const quoteDescription = tier.slug === 'base'
+      ? (product.description || `${product.name} - per query`)
+      : `${product.name} — ${tier.label} (up to ${tier.maxRows} records in one call)`;
+
+    const tiers = listTiers(product.price_model).map((t) => {
+      const sep = request.url.includes('?') ? '&' : '?';
+      return {
+        tier: t.slug,
+        price: `$${t.amountUsdc.toFixed(2)}`,
+        maxAmountRequired: microUsdc(t.amountUsdc).toString(),
+        rows: t.maxRows, // null for the base per-query tier
+        resource: t.slug === 'base' ? request.url : `${request.url}${sep}tier=${t.slug}`,
+      };
+    });
+
     const xPayment = request.headers.get('X-PAYMENT');
 
     const paymentQuote = {
@@ -61,21 +104,55 @@ export async function proxy(request: NextRequest) {
       accepts: [
         {
           scheme: 'exact',
-          price: '$0.01',
+          price: `$${amountUsdc.toFixed(2)}`,
           network: 'base',
-          payTo: payoutAddress,
-          maxAmountRequired: '10000', // $0.01 USDC (6 decimals)
+          payTo: evmPayoutAddress,
+          maxAmountRequired: requiredUnits.toString(),
           asset: usdcContractAddress,
           maxTimeoutSeconds: 86400,
           resource: request.url,
-          description: 'Synthetic Big Five personality profiles - per query',
+          description: quoteDescription,
           mimeType: 'application/json',
-          extra: {
-            name: 'USD Coin',
-            version: '2',
-          },
+          // extra.name/version form the EIP-712 domain standard x402 clients
+          // sign against; assetTransferMethod tells agents which signing
+          // primitive this entry expects (Capacitr-style ecosystem hint).
+          extra: { name: 'USD Coin', version: '2', assetTransferMethod: 'eip3009' },
         },
+        ...(solanaPayoutAddress ? [{
+          scheme: 'exact',
+          price: `$${amountUsdc.toFixed(2)}`,
+          network: 'solana',
+          payTo: solanaPayoutAddress,
+          maxAmountRequired: requiredUnits.toString(),
+          asset: usdcSolanaMint,
+          maxTimeoutSeconds: 86400,
+          resource: request.url,
+          description: quoteDescription,
+          mimeType: 'application/json',
+        }] : []),
       ],
+      tiers,
+      // Two settlement models are accepted on Base:
+      //  1. STANDARD x402 (recommended; what Bankr agents and x402-fetch do):
+      //     sign a gasless EIP-3009 TransferWithAuthorization and send
+      //     { x402Version: 1, scheme: 'exact', network: 'base',
+      //       payload: { signature, authorization } } — the server settles via
+      //     facilitator. No binding signature is needed on this path.
+      //  2. SELF-SETTLED: broadcast the USDC transfer yourself and submit
+      //     { txHash } (plus the binding fields below when required).
+      settlement: {
+        methods: ['eip3009', 'txhash'],
+        note: 'eip3009: sign TransferWithAuthorization per accepts[]; the server settles and pays gas. txhash: settle on-chain yourself, then submit { txHash, payer, signature } with the binding challenge below.',
+      },
+      binding: bindingRequired
+        ? {
+            required: true,
+            appliesTo: 'txhash settlements only — eip3009 authorization payloads need no binding signature',
+            algo: { base: 'eip191-personal-sign', solana: 'ed25519' },
+            challenge: bindingChallengeTemplate,
+            note: 'Sign the newline-separated challenge (values filled in) with the wallet that sent the payment, then include { payer, signature } next to txHash in the X-PAYMENT payload. payer must equal the paying wallet.',
+          }
+        : { required: false },
     };
 
     if (!xPayment) {
@@ -86,136 +163,112 @@ export async function proxy(request: NextRequest) {
     }
 
     try {
-      // Decode X-PAYMENT header
-      const decoded = safeBase64Decode(xPayment);
-      const paymentPayload = JSON.parse(decoded);
-
-      const { scheme, network, payload } = paymentPayload;
-      if (scheme !== 'exact' || network !== 'base') {
-        throw new Error('Unsupported scheme or network');
+      let paymentPayload: any;
+      try {
+        paymentPayload = JSON.parse(safeBase64Decode(xPayment));
+      } catch {
+        throw new PaymentError('malformed', 'X-PAYMENT header is not valid base64 JSON');
       }
 
-      const { signature, authorization } = payload;
-      const { from, to, value, validAfter, validBefore, nonce } = authorization;
+      const { scheme, network, payload } = paymentPayload || {};
+      if (scheme !== 'exact') throw new PaymentError('unsupported', 'Unsupported payment scheme');
+      if (network !== 'base' && network !== 'solana') throw new PaymentError('unsupported', 'Unsupported network');
 
-      // 1. Off-chain EIP-3009 Signature Verification (Free)
-      const isValid = await verifyTypedData({
-        address: from as `0x${string}`,
-        domain: {
-          name: 'USD Coin',
-          version: '2',
-          chainId: 8453, // Base Mainnet
-          verifyingContract: usdcContractAddress,
-        },
-        types: {
-          TransferWithAuthorization: [
-            { name: 'from', type: 'address' },
-            { name: 'to', type: 'address' },
-            { name: 'value', type: 'uint256' },
-            { name: 'validAfter', type: 'uint256' },
-            { name: 'validBefore', type: 'uint256' },
-            { name: 'nonce', type: 'bytes32' },
-          ],
-        },
-        primaryType: 'TransferWithAuthorization',
-        message: {
-          from: from as `0x${string}`,
-          to: to as `0x${string}`,
-          value: BigInt(value),
-          validAfter: BigInt(validAfter),
-          validBefore: BigInt(validBefore),
-          nonce: nonce as `0x${string}`,
-        },
-        signature: signature as `0x${string}`,
+      const resourcePath = request.nextUrl.pathname + request.nextUrl.search;
+      const { buyerWallet, txHash } = await verifyPayment({
+        network,
+        payload,
+        requiredUnits,
+        resourcePath,
+        resourceUrl: request.url,
       });
 
-      if (!isValid) {
-        throw new Error('Invalid signature');
+      // Atomic reservation + replay guard. The unique index on payment_sig
+      // (migration 0005) makes this the authoritative single-use gate; the row
+      // is committed BEFORE any data is served. rows_served stays NULL until the
+      // query route claims it exactly once (see claimServe).
+      let insertErr: any = null;
+      try {
+        const r = await dbAdmin.from('x402_payments').insert({
+          product_slug: slug,
+          buyer_wallet: buyerWallet || null,
+          network,
+          amount_usdc: amountUsdc,
+          tx_ref: txHash,
+          payment_sig: txHash,
+          query_params: Object.fromEntries(request.nextUrl.searchParams.entries()),
+          rows_served: null,
+          status: 'settled',
+        });
+        insertErr = r.error;
+      } catch (e) {
+        insertErr = e;
       }
 
-      // Check recipient and value match our quote
-      if (to.toLowerCase() !== payoutAddress.toLowerCase()) {
-        throw new Error('Payout recipient address mismatch');
-      }
-      if (BigInt(value) < BigInt(10000)) {
-        throw new Error('Insufficient payment amount');
+      if (insertErr) {
+        if ((insertErr as any).code === '23505') {
+          // A row for this txHash already exists. Distinguish a genuine replay
+          // (already served) from a resumable payment (verified earlier but never
+          // served — e.g. the query route hit a transient DB error and failed
+          // closed). If rows_served is still NULL for this slug, let the request
+          // through to claim it exactly once; the conditional UPDATE in
+          // claimServe keeps serve-once semantics even under concurrency. Binding
+          // (enforced in production) guarantees only the real payer reaches here,
+          // so resuming cannot hand a paid row to an observer.
+          let existing: any = null;
+          try {
+            const r = await dbAdmin
+              .from('x402_payments')
+              .select('rows_served, product_slug')
+              .eq('payment_sig', txHash)
+              .maybeSingle();
+            existing = r.data;
+          } catch {
+            existing = null;
+          }
+          const resumable =
+            existing && existing.product_slug === slug && existing.rows_served === null;
+          if (!resumable) {
+            throw new PaymentError('replay', 'This txHash has already been redeemed');
+          }
+          // fall through to serve (resume the unserved payment)
+        } else {
+          throw new PaymentError('infra', 'Failed to persist payment');
+        }
       }
 
-      // Check authorization time window off-chain — the chain would reject these
-      // anyway, but only AFTER we spent settlement gas on the attempt.
-      const nowSec = BigInt(Math.floor(Date.now() / 1000));
-      if (BigInt(validBefore) <= nowSec) {
-        throw new Error('Payment authorization expired (validBefore in the past)');
-      }
-      if (BigInt(validAfter) > nowSec) {
-        throw new Error('Payment authorization not yet valid (validAfter in the future)');
-      }
-
-      // 2. Replay protection: reject signatures we have already settled.
-      // payment_sig has a unique index (migration 0005); tx_ref holds the tx hash.
-      const { data: existingPayment } = await dbAdmin
-        .from('x402_payments')
-        .select('id')
-        .eq('payment_sig', signature)
-        .maybeSingle();
-
-      if (existingPayment) {
-        throw new Error('Payment signature already used (replay)');
-      }
-
-      // 3. Submit transaction on-chain using the settlement key
-      const { r, s, v } = hexToSignature(signature as `0x${string}`);
-      const txHash = await walletClient.writeContract({
-        address: usdcContractAddress,
-        abi: usdcAbi,
-        functionName: 'transferWithAuthorization',
-        args: [
-          from as `0x${string}`,
-          to as `0x${string}`,
-          BigInt(value),
-          BigInt(validAfter),
-          BigInt(validBefore),
-          nonce as `0x${string}`,
-          Number(v),
-          r,
-          s,
-        ],
+      emit({
+        event_type: 'payment.settled',
+        actor_type: 'agent',
+        actor_id: buyerWallet,
+        payload: { product_slug: slug, amount_usdc: amountUsdc, network },
       });
 
-      // 4. Wait for receipt to guarantee settlement before serving request
-      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
-      if (receipt.status !== 'success') {
-        throw new Error('USDC transferWithAuthorization transaction failed on-chain');
-      }
-
-      // Forward buyer details to route handler using request headers
       const requestHeaders = new Headers(request.headers);
-      requestHeaders.set('x-buyer-wallet', from);
-      requestHeaders.set('x-tx-ref', txHash); // Actual on-chain settlement tx hash
-      requestHeaders.set('x-payment-sig', signature); // Client signature — stored for replay protection
+      requestHeaders.set('x-buyer-wallet', buyerWallet);
+      requestHeaders.set('x-tx-ref', txHash);
+      requestHeaders.set('x-payment-sig', txHash);
       requestHeaders.set('x-next-pathname', request.nextUrl.pathname);
 
-      return NextResponse.next({
-        request: {
-          headers: requestHeaders,
-        },
-      });
+      return NextResponse.next({ request: { headers: requestHeaders } });
     } catch (e: any) {
+      if (e instanceof PaymentError) {
+        return NextResponse.json(
+          { error: 'Payment verification failed', kind: e.kind, message: e.message },
+          { status: httpStatusFor(e.kind) },
+        );
+      }
       console.error('[payment-gate-error]', e);
       return NextResponse.json(
-        { error: 'Payment verification failed', message: e.message || String(e) },
-        { status: 400 }
+        { error: 'Payment verification failed', message: 'Internal error' },
+        { status: 500 },
       );
     }
   }
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-next-pathname', request.nextUrl.pathname);
-  return NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
-  });
+  return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
 export const config = {
