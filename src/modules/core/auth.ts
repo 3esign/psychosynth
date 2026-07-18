@@ -22,8 +22,14 @@ export async function requireAdmin(_req: Request) {
     throw err('unauthorized', 401, 'login required');
   }
   
-  const allow = (process.env.ADMIN_EMAILS ?? 'owner@example.com').split(',').map(s => s.trim());
-  if (!allow.includes(user.email)) throw err('forbidden', 403, 'not an admin');
+  // Fail CLOSED: with no ADMIN_EMAILS configured the allowlist is empty and
+  // every request is denied, rather than falling back to a guessable default
+  // that could be registrable in the Supabase project.
+  const allow = (process.env.ADMIN_EMAILS ?? '')
+    .split(',')
+    .map(s => s.trim().toLowerCase())
+    .filter(Boolean);
+  if (!allow.includes(user.email.toLowerCase())) throw err('forbidden', 403, 'not an admin');
   
   return { email: user.email };
 }

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { TraitBars } from '@/components/lab/TraitBars';
 import { ReasonPalette } from '@/components/lab/ReasonPalette';
 import { JsonEditor } from '@/components/lab/JsonEditor';
+import { AdvancedParams } from '@/components/lab/AdvancedParams';
 
 export default function ReviewPage() {
   const [queue, setQueue] = useState<any[]>([]);
@@ -339,6 +340,17 @@ export default function ReviewPage() {
                 </div>
               </div>
             </div>
+
+            {/* Advanced Attributes (v2 Parameters) */}
+            {(currentProfile.dark_triad || currentProfile.prospect_theory || currentProfile.cognitive_reflection) && (
+              <div className="border-t border-neutral-900 pt-6">
+                <AdvancedParams
+                  darkTriad={currentProfile.dark_triad}
+                  prospectTheory={currentProfile.prospect_theory}
+                  cognitiveReflection={currentProfile.cognitive_reflection}
+                />
+              </div>
+            )}
 
             {/* Cognitive Biases */}
             <div className="space-y-2">

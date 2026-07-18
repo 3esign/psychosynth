@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { dbAdmin } from '@/modules/core/db';
 import { err, toResponse } from '@/modules/core/errors';
 import { emit } from '@/modules/learning/events';
-import { rateLimit } from '@/modules/core/rate_limiter';
+import { rateLimit, clientIp } from '@/modules/core/rate_limiter';
 
 // Free, deterministic preview: a fixed, reproducible slice of a product's
 // records so a buyer can verify shape and quality before paying. Determinism
@@ -63,8 +63,7 @@ async function previewScenarioResponses(pct: number) {
 
 export async function GET(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
-    const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
-    if (!rateLimit(ip)) {
+    if (!(await rateLimit(clientIp(req)))) {
       throw err('too_many_requests', 429, 'Rate limit exceeded. Max 60 requests per minute.');
     }
     const { slug } = await params;

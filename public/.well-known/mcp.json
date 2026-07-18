@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "2024-11-05",
+  "name": "psychosynth",
+  "description": "Discover and query Psychosynth synthetic psychometric data (Big Five profiles, cognitive biases, profile-conditioned behavioral responses) over the x402 protocol.",
+  "transport": {
+    "type": "stdio",
+    "command": "npx",
+    "args": [
+      "-y",
+      "psychosynth-mcp"
+    ],
+    "env": {
+      "PSYCHOSYNTH_API_URL": "https://your-deployment.vercel.app",
+      "BUYER_PRIVATE_KEY": "0xYourPrivateKey"
+    }
+  },
+  "capabilities": {
+    "tools": {
+      "list_products": {
+        "description": "List the Psychosynth data products available for purchase."
+      },
+      "preview_records": {
+        "description": "Fetch a free, deterministic sample of a product's records."
+      },
+      "get_quote": {
+        "description": "Get the x402 payment quote for a paid query."
+      },
+      "query_records": {
+        "description": "Run a paid query and return the full records."
+      }
+    }
+  }
+}

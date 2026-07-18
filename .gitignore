@@ -49,3 +49,19 @@ next-env.d.ts
 
 .vercel
 .env*
+
+.vercel
+.env*
+
+# working artifacts & sub-package deps (added by bankr integration commit)
+.backup-corrupted-20260712/
+.sync_probe.txt
+curl_out.txt
+git_diff.txt
+tc_run.log
+mcp/node_modules/
+mcp/dist/
+packages/**/node_modules/
+packages/**/dist/
+packages/**/__pycache__/
+packages/**/.venv/

@@ -1,0 +1,29 @@
+{
+  "name": "@psychosynth/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for Psychosynth agent-native psychometric data marketplace",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "viem": "^2.55.0",
+    "x402-fetch": "^1.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  },
+  "keywords": [
+    "psychosynth",
+    "mcp",
+    "x402",
+    "agentic-commerce"
+  ],
+  "license": "MIT"
+}

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { dbAdmin } from '@/modules/core/db';
 import { resolveQuery } from '@/modules/recipes/resolver';
-import { recordPayment } from '@/modules/commerce/payments';
+import { claimServe } from '@/modules/commerce/payments';
 import { err, toResponse, ApiError } from '@/modules/core/errors';
 import { emit } from '@/modules/learning/events';
 import { selectTier } from '@/modules/commerce/pricing';
@@ -26,12 +26,19 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
       throw err('not_found', 404, 'Product not found or inactive');
     }
 
+    // Payment is enforced by the paywall middleware (src/proxy.ts), which sets
+    // these headers only after verifying settlement on-chain. Requiring them
+    // here too means the route refuses to serve even if it were ever reached
+    // without passing through the gate.
+    if (!paymentSig || !txRef) {
+      throw err('payment_required', 402, 'Payment required');
+    }
+
     const rules = (product.recipes as any).query_rules;
 
     // Resolve the purchased tier (base per-query, or a bulk pack via ?tier=).
-    // The proxy already quoted and settled this exact tier's amount. A pack
-    // unlocks a larger single-call result, so raise the row cap (and default)
-    // to the pack size for this request; the base tier is served unchanged.
+    // A pack unlocks a larger single-call result, so raise the row cap for this
+    // request; the base tier is served unchanged.
     const tier = selectTier(product.price_model, queryParams);
     const effectiveRules = tier.maxRows != null
       ? { ...rules, default_limit: tier.maxRows, max_limit: tier.maxRows }
@@ -45,41 +52,37 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
       resolveError = e;
     }
 
-    const priceUsdc = tier.amountUsdc;
-
-    // Record payment (always record if payment was successfully processed on-chain)
-    if (txRef && paymentSig) {
-      try {
-        await recordPayment({
-          productSlug: slug,
-          buyerWallet,
-          amountUsdc: priceUsdc,
-          txRef,
-          paymentSig,
-          queryParams: Object.fromEntries(queryParams.entries()),
-          rowsServed: resolveError ? 0 : records.length
-        });
-      } catch (recordingErr) {
-        console.error('Failed to record payment in DB after on-chain settlement:', recordingErr);
-      }
+    // Point of no return: atomically claim the payment for serving. This is
+    // single-use and tier-bound — a replayed, forged, or underpaid payment is
+    // rejected here and no data is returned.
+    const claim = await claimServe({
+      paymentSig,
+      rowsServed: resolveError ? 0 : records.length,
+      minAmountUsdc: tier.amountUsdc,
+    });
+    if (claim === 'already') {
+      throw err('payment_invalid', 402, 'Payment not found, already used, or insufficient for this tier');
     }
+    // Fail CLOSED on a transient DB/infra failure: we cannot confirm the payment
+    // was claimed, so we do not serve. The payment row stays reserved
+    // (rows_served = NULL), and the proxy's resumable-replay path lets the same
+    // payer retry this exact payment without being locked out as a replay.
+    if (claim === 'error') {
+      throw err('claim_unconfirmed', 503, 'Could not confirm payment claim; please retry with the same payment.');
+    }
+    const paymentRecorded = claim === 'claimed';
 
-    // If query resolution threw an error, handle the failure gracefully by returning
-    // the error details along with the transaction reference (so the buyer has proof of payment).
+    // If query resolution threw, surface the failure but still cite the tx as
+    // proof of payment (the payment has now been consumed).
     if (resolveError) {
       const a = resolveError instanceof ApiError ? resolveError : err('internal', 500, resolveError.message || 'Internal query resolution error');
+      const message = `Query failed after payment settled on-chain. Reference transaction: ${txRef}. ${a.message}`;
       const details = {
         ...(a.details as object || {}),
         tx_ref: txRef,
-        payment_recorded: true
+        payment_recorded: paymentRecorded,
       };
-      return NextResponse.json({
-        error: {
-          code: a.code,
-          message: `Query failed after payment settled on-chain. Reference transaction: ${txRef}. ${a.message}`,
-          details
-        }
-      }, { status: a.status });
+      return NextResponse.json({ error: { code: a.code, message, details } }, { status: a.status });
     }
 
     // Emit served/unserved events for Learning Loop demand telemetry
@@ -91,8 +94,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
         payload: {
           product_slug: slug,
           filters: Object.fromEntries(queryParams.entries()),
-          rows_found: records.length
-        }
+          rows_found: records.length,
+        },
       });
     } else {
       emit({
@@ -102,21 +105,18 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
         payload: {
           product_slug: slug,
           filters: Object.fromEntries(queryParams.entries()),
-          rows_found: 0
-        }
+          rows_found: 0,
+        },
       });
     }
 
     const host = req.headers.get('host') || 'localhost:3000';
     const protocol = host.startsWith('localhost') ? 'http' : 'https';
 
-    // Methodology link depends on what the recipe actually serves — this was
-    // previously hardcoded to big-five-profile-gen for every product, which
-    // was wrong (and misleading) for anything that isn't the profile library.
-    // Each entity that is generator output points at its generator's live
-    // methodology page. Biases are static literature-sourced reference rows,
-    // not generator output, so there is no generator methodology page to point
-    // to; each bias record already carries its own academic `source` citation.
+    // Methodology link depends on what the recipe actually serves. Generator
+    // output points at its generator's live methodology page; static
+    // literature-sourced reference rows (e.g. biases) cite their own academic
+    // source per record, so there is no generator methodology page.
     const methodologyGeneratorSlug: Record<string, string> = {
       profile: 'big-five-profile-gen',
       scenario_response: 'response-gen',
@@ -136,9 +136,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
         ...(generatorSlug ? {} : {
           note: 'Reference taxonomy, not generator output — each record cites its own academic source directly.',
         }),
-        synthetic: true
+        synthetic: true,
       },
-      docs: `${protocol}://${host}/docs`
+      docs: `${protocol}://${host}/docs`,
     });
 
   } catch (e) {

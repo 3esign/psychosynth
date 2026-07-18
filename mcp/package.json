@@ -1,0 +1,41 @@
+{
+  "name": "psychosynth-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for the Psychosynth synthetic psychometric data marketplace — discover the catalog, fetch free deterministic previews, get x402 price quotes, and run paid queries with your own wallet.",
+  "type": "module",
+  "bin": {
+    "psychosynth-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "server.json"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "mcp",
+    "modelcontextprotocol",
+    "x402",
+    "psychometric",
+    "synthetic-data",
+    "agents"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "viem": "^2.55.0",
+    "x402-fetch": "^1.2.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5"
+  }
+}

@@ -34,7 +34,7 @@ export default async function DocsPage() {
             </div>
             <div className="p-4 bg-slate-900 rounded-xl border border-slate-800">
               <span className="text-indigo-400">GET /api/v1/query/:slug</span>
-              <p className="font-sans text-slate-400 mt-1">Paid via x402. Full records with filter support.</p>
+              <p className="font-sans text-slate-400 mt-1">Paid via x402. Full records with filter support. Add <code className="text-emerald-400">?tier=&lt;pack&gt;</code> to buy a bulk pack (many records in one paid call) where offered — the 402 quote lists available tiers.</p>
             </div>
           </div>
         </section>
@@ -43,20 +43,32 @@ export default async function DocsPage() {
           <h2 className="text-2xl font-semibold text-white border-b border-slate-800 pb-3">The 402 payment flow</h2>
           <ol className="list-decimal list-inside space-y-2 text-slate-300">
             <li>Request <code className="text-indigo-400">/api/v1/query/:slug</code> with no payment → HTTP 402 + a JSON quote (price, payTo address, USDC contract, network).</li>
-            <li>Sign an EIP-3009 <code className="text-indigo-400">TransferWithAuthorization</code> for the quoted amount with your wallet — no gas needed on your side.</li>
-            <li>Retry the request with the signed authorization in the <code className="text-indigo-400">X-PAYMENT</code> header (base64 JSON).</li>
-            <li>We verify the signature, settle it on-chain (we pay the gas), and serve your data in the same request.</li>
+            <li>Send the quoted USDC amount on-chain to the returned <code className="text-indigo-400">payTo</code> address — your wallet pays the network gas (agent-paid).</li>
+            <li>Retry the request with your <code className="text-indigo-400">txHash</code> in the <code className="text-indigo-400">X-PAYMENT</code> header (base64 JSON).</li>
+            <li>We verify the transfer on-chain (correct asset, recipient, and amount), record it once against replays, and serve your data.</li>
           </ol>
           <p className="text-slate-400">
-            Clients like <code className="text-indigo-400">x402-fetch</code> automate the whole handshake:
+            The whole handshake is plain HTTP plus one on-chain transfer:
           </p>
           <pre className="p-4 bg-slate-900 rounded-xl border border-slate-800 text-sm text-slate-300 overflow-x-auto">
-{`import { wrapFetchWithPayment } from 'x402-fetch';
+{`import { erc20Abi } from 'viem';
 
-const payingFetch = wrapFetchWithPayment(fetch, walletClient);
-const res = await payingFetch(
-  'https://<host>/api/v1/query/personality-profile-library?tags=trading&limit=20'
-);
+// 1. Ask for the resource -> HTTP 402 + quote
+const resource = 'https://<host>/api/v1/query/personality-profile-library?tags=trading&limit=20';
+const { accepts } = await (await fetch(resource)).json();
+const { payTo, maxAmountRequired, asset } = accepts.find(a => a.network === 'base');
+
+// 2. Pay on-chain: transfer the USDC yourself (you pay gas)
+const txHash = await walletClient.writeContract({
+  address: asset, abi: erc20Abi, functionName: 'transfer',
+  args: [payTo, BigInt(maxAmountRequired)],
+});
+
+// 3. Retry with the tx hash in X-PAYMENT (base64 JSON)
+const xPayment = btoa(JSON.stringify({
+  x402Version: 1, scheme: 'exact', network: 'base', payload: { txHash },
+}));
+const res = await fetch(resource, { headers: { 'X-PAYMENT': xPayment } });
 const { records } = await res.json();`}
           </pre>
         </section>
@@ -72,6 +84,18 @@ const { records } = await res.json();`}
                   <span className="text-indigo-400 font-mono text-sm">${Number(p.price_model?.amount_usdc ?? 0).toFixed(2)} USDC / query</span>
                 </div>
                 <p className="text-slate-400">{p.description}</p>
+                {Array.isArray(p.price_model?.packs) && p.price_model.packs.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-sm text-slate-500">Bulk packs (one paid call, many rows):</span>
+                    <div className="flex flex-wrap gap-2">
+                      {p.price_model.packs.map((pk: any) => (
+                        <code key={pk.slug} className="px-2 py-1 bg-slate-950 rounded border border-slate-800 text-xs text-emerald-400">
+                          ?tier={pk.slug} → ${Number(pk.amount_usdc).toFixed(2)} USDC / up to {pk.max_rows} records
+                        </code>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className="font-mono text-xs text-slate-400">
                   <span className="text-slate-500">slug:</span> {p.slug}
                 </div>

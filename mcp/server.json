@@ -1,0 +1,40 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "name": "io.github.3esign/psychosynth",
+  "description": "Discover and query Psychosynth synthetic psychometric data (Big Five profiles, cognitive biases, profile-conditioned behavioral responses) over the x402 protocol. Free catalog, free deterministic previews, and price quotes; paid queries settle in USDC on Base using your own wallet.",
+  "repository": {
+    "url": "https://github.com/3esign/cfaces",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "psychosynth-mcp",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "PSYCHOSYNTH_API_URL",
+          "description": "Base URL of the Psychosynth API deployment (e.g. https://your-app.vercel.app). Defaults to http://localhost:3000 for local development.",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
+          "name": "BUYER_PRIVATE_KEY",
+          "description": "Base (EVM) wallet private key used to pay for queries via x402. Omit to use only the free catalog, preview, and quote tools.",
+          "isRequired": false,
+          "isSecret": true
+        },
+        {
+          "name": "BASE_RPC_URL",
+          "description": "Optional custom Base mainnet RPC endpoint. Defaults to https://mainnet.base.org.",
+          "isRequired": false,
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}
