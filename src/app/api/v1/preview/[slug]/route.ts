@@ -15,7 +15,7 @@ function previewLimit(pct: number, total: number) {
   return Math.min(25, Math.ceil((Number(pct) || 0.05) * total));
 }
 
-async function previewProfiles(pct: number) {
+async function previewProfiles(pct: number, rules?: any) {
   // Deterministic, stable slice: order by id (immutable, always present) so the
   // same product always returns the same preview rows.
   //
@@ -24,10 +24,18 @@ async function previewProfiles(pct: number) {
   // relationship is missing/ambiguous in a given environment, PostgREST 500s the
   // whole preview. The paid profile query never joins provenance, so dropping it
   // here also makes preview and paid output shapes match more closely.
-  const { data, error } = await dbAdmin.from('profiles')
+  let q = dbAdmin.from('profiles')
     .select('id, version, big_five, mbti_label, decision_style, summary, tags')
-    .eq('status', 'approved')
-    .order('id');
+    .eq('status', 'approved');
+
+  // Honor the recipe's server-enforced themed filter so a pack's preview shows
+  // the same slice the paid query serves (keeps preview honest — see resolver).
+  const hardTags = Array.isArray(rules?.filters?.tags_include)
+    ? rules.filters.tags_include.map((s: unknown) => String(s))
+    : null;
+  if (hardTags && hardTags.length) q = q.overlaps('tags', hardTags);
+
+  const { data, error } = await q.order('id');
   if (error) throw err('internal', 500, error.message);
 
   const rows = data ?? [];
@@ -76,13 +84,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
       throw err('not_found', 404, 'Product not found or inactive');
     }
 
-    const entity = (product.recipes as any)?.query_rules?.entity ?? 'profile';
+    const rules = (product.recipes as any)?.query_rules;
+    const entity = rules?.entity ?? 'profile';
     const pct = Number(product.preview_pct) || 0.05;
 
     let records: any[];
     switch (entity) {
       case 'profile':
-        records = await previewProfiles(pct);
+        records = await previewProfiles(pct, rules);
         break;
       case 'bias':
         records = await previewBiases(pct);

@@ -22,6 +22,17 @@ async function resolveProfileQuery(rules: any, req: URLSearchParams) {
     .select('id, version, big_five, mbti_label, decision_style, summary, tags, content')
     .eq('status', rules.filters?.status ?? 'approved');
 
+  // Server-enforced hard filter (NOT buyer-overridable): a themed pack recipe
+  // can pin `filters.tags_include` so the product only ever serves that slice
+  // (e.g. the Robinhood counterparty pack serves only retail-trading profiles).
+  // This is what makes "themed packs" actually themed — without it every pack
+  // returns the whole approved library (see DB_AUDIT finding C3). Applied with
+  // `overlaps` so a profile matches if it carries ANY of the pinned tags.
+  const hardTags = Array.isArray(rules.filters?.tags_include)
+    ? rules.filters.tags_include.map((s: unknown) => String(s))
+    : null;
+  if (hardTags && hardTags.length) q = q.overlaps('tags', hardTags);
+
   const allowed = new Set(rules.allow_request_filters ?? []);
 
   if (allowed.has('tags') && req.get('tags')) {

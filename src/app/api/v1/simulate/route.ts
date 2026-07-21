@@ -2,14 +2,24 @@ import { NextResponse } from 'next/server';
 import { generateObject, jsonSchema } from 'ai';
 import { providers } from '@/modules/generation/models';
 import { err, toResponse } from '@/modules/core/errors';
+import { rateLimit, clientIp } from '@/modules/core/rate_limiter';
 
 export async function POST(req: Request) {
   try {
+    // This demo endpoint is free and can invoke an LLM, so it must be metered —
+    // otherwise it is an unauthenticated way to burn inference credits (DoS).
+    if (!(await rateLimit(`sim:${clientIp(req)}`))) {
+      throw err('too_many_requests', 429, 'Rate limit exceeded. Max 60 requests per minute.');
+    }
+
     const body = await req.json();
     const { big_five, dark_triad, prospect_theory, cognitive_reflection, scenario } = body;
 
-    if (!scenario) {
-      throw err('invalid_params', 400, 'scenario is required');
+    if (!scenario || typeof scenario !== 'string') {
+      throw err('invalid_params', 400, 'scenario is required and must be a string');
+    }
+    if (scenario.length > 1000) {
+      throw err('invalid_params', 400, 'scenario must be under 1000 characters');
     }
 
     // Determine configured provider from env keys

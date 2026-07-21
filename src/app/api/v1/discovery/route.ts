@@ -49,6 +49,27 @@ export async function GET(req: Request) {
       query: `${origin}/api/v1/query/${p.slug}`,
     }));
 
+    // Scenario Battery Evals (behavioral certification for trading agents).
+    // Guarded: degrade to [] if the eval_batteries migration isn't applied yet.
+    let evaluations: any[] = [];
+    try {
+      const { data: batteries } = await dbAdmin
+        .from('eval_batteries')
+        .select('slug, title, description, price_model')
+        .eq('status', 'live')
+        .order('slug');
+      evaluations = (batteries ?? []).map((b) => ({
+        battery: b.slug,
+        title: b.title,
+        description: b.description,
+        price_usdc: Number((b.price_model as any)?.amount_usdc ?? 0),
+        get: `${origin}/api/v1/eval/${b.slug}`,   // free: scenarios + rubric
+        submit: `${origin}/api/v1/eval/${b.slug}`, // POST (x402): score your agent
+      }));
+    } catch {
+      evaluations = [];
+    }
+
     const evmPayTo = process.env.X402_PAYOUT_ADDRESS || null;
     const solanaPayTo = process.env.SOLANA_PAYOUT_ADDRESS || null;
 
@@ -62,6 +83,7 @@ export async function GET(req: Request) {
         catalog: `${origin}/api/v1/products`,
         preview: `${origin}/api/v1/preview/{slug}`,
         query: `${origin}/api/v1/query/{slug}`,
+        eval: `${origin}/api/v1/eval/{battery}`,
       },
       payment: {
         protocol: 'x402',
@@ -88,6 +110,7 @@ export async function GET(req: Request) {
         flow: 'GET the query endpoint without X-PAYMENT to receive a 402 quote with accepts[] and tiers; sign per accepts[]; retry with X-PAYMENT: base64(JSON envelope).',
       },
       products,
+      evaluations,
     });
   } catch (e) {
     return toResponse(e);

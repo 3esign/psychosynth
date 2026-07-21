@@ -3,7 +3,7 @@
 
 import { readBodySafe } from './util.js';
 
-export const API_BASE = (process.env.PSYCHOSYNTH_API_URL || 'http://localhost:3000').replace(/\/+$/, '');
+export const API_BASE = (process.env.PSYCHOSYNTH_API_URL || 'https://psychosynth.vercel.app').replace(/\/+$/, '');
 
 export interface ApiResult {
   status: number;
