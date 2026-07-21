@@ -9,6 +9,20 @@ export default async function LandingPage() {
     .select('slug, name, description, price_model, recipes(query_rules)')
     .eq('status', 'live');
 
+  // Agent runtimes & payment rails Psychosynth connects to. Badges are honest:
+  // "Live" = verified working today, "Available" = plugin/config shipped in-repo,
+  // "Planned" = on the roadmap (see docs/VIRTUALS_ACP.md).
+  const connections = [
+    { name: 'Bankr', tag: 'Live', badge: 'bg-amber-500/10 border-amber-500/20 text-amber-300', blurb: 'Bankr agents discover the catalog and pay per query in gasless USDC via the Psychosynth skill.', href: 'https://skills.bankr.bot', external: true, cta: 'View on Bankr' },
+    { name: 'x402-fetch', tag: 'Live', badge: 'bg-amber-500/10 border-amber-500/20 text-amber-300', blurb: 'Any agent using x402-fetch settles out of the box — no API keys, no signup.', href: '/api/v1/discovery', external: false, cta: 'Discovery' },
+    { name: 'MCP', tag: 'Native', badge: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300', blurb: 'A standard MCP server exposes list, preview, quote and query as agent tools.', href: 'https://modelcontextprotocol.io', external: true, cta: 'Learn more' },
+    { name: 'ElizaOS', tag: 'Available', badge: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300', blurb: 'Connect through @elizaos/plugin-mcp in your agent character config.', href: '/connect', external: false, cta: 'Setup' },
+    { name: 'OpenClaw', tag: 'Available', badge: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300', blurb: 'Add via MCPorter: openclaw mcp add psychosynth.', href: '/connect', external: false, cta: 'Setup' },
+    { name: 'Hermes', tag: 'Available', badge: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300', blurb: 'Nous Research agents register the server over stdio in their config.', href: '/connect', external: false, cta: 'Setup' },
+    { name: 'Solana Agent Kit', tag: 'Available', badge: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300', blurb: 'Solana-native agents settle payments in USDC-SPL on Solana.', href: '/connect', external: false, cta: 'Setup' },
+    { name: 'Virtuals · ACP', tag: 'Planned', badge: 'bg-slate-600/20 border-slate-600/30 text-slate-400', blurb: 'Provider integration for the Virtuals agent economy (escrowed USDC on Base).', href: '/connect', external: false, cta: 'Roadmap' },
+  ];
+
   return (
     <main className="min-h-screen bg-slate-950 text-slate-200 selection:bg-indigo-500/30 font-sans">
       {/* Background gradients */}
@@ -162,6 +176,32 @@ export default async function LandingPage() {
                 </div>
               );
             })}
+          </div>
+        </section>
+
+        {/* Connections & Integrations */}
+        <section className="space-y-6">
+          <div className="space-y-1">
+            <h2 className="text-2xl font-bold tracking-tight text-white">Connections &amp; Integrations</h2>
+            <p className="text-sm text-slate-500">Psychosynth is agent-native — reach it from any of these runtimes and settle per query over x402. More rails on the way.</p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {connections.map((c) => (
+              <a
+                key={c.name}
+                href={c.href}
+                {...(c.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                className="group p-5 rounded-xl bg-slate-900/40 border border-slate-800/70 hover:border-slate-700 hover:bg-slate-900/70 transition-all flex flex-col gap-2"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-bold text-white tracking-wide">{c.name}</span>
+                  <span className={`shrink-0 px-2 py-0.5 rounded text-[9px] font-bold font-mono border ${c.badge}`}>{c.tag}</span>
+                </div>
+                <p className="text-xs text-slate-400 leading-relaxed font-sans">{c.blurb}</p>
+                <span className="text-[10px] text-slate-500 group-hover:text-slate-300 font-mono font-semibold mt-auto pt-1">{c.cta} &rarr;</span>
+              </a>
+            ))}
           </div>
         </section>
 
