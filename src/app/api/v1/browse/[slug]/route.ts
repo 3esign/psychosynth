@@ -4,15 +4,7 @@ import { err, toResponse } from '@/modules/core/errors';
 import { rateLimit, clientIp } from '@/modules/core/rate_limiter';
 
 // Free, filterable BROWSE — the public shopfront read behind /explore.
-//
-// It answers "how many profiles match these filters, and show me a taste" WITHOUT
-// exposing the paid corpus: it returns a total match COUNT plus a small, stable,
-// content-free SAMPLE (Big Five vector, summary, tags — never the full `content`
-// with Dark Triad / prospect-theory / suggested biases, which is what payment
-// buys). Filters are gated by the recipe's allow_request_filters, exactly like
-// the paid resolver, so a browse count always equals a purchasable slice.
-// Rate-limited; deterministic ordering means re-querying a filter yields no new
-// rows. NOT a substitute for /api/v1/query.
+// Supports both 'profile' entity products and 'scenario_response' entity products.
 
 const BF = ['openness', 'conscientiousness', 'extraversion', 'agreeableness', 'neuroticism'];
 const SAMPLE = 24;
@@ -34,10 +26,34 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
     if (!product || product.status !== 'live') throw err('not_found', 404, 'Product not found or inactive');
 
     const rules = (product.recipes as any)?.query_rules;
-    if ((rules?.entity ?? 'profile') !== 'profile') {
-      throw err('unsupported', 400, 'Browse is available for profile products only');
-    }
+    const entity = rules?.entity ?? 'profile';
     const allowed = new Set<string>(rules?.allow_request_filters ?? []);
+
+    if (entity === 'scenario_response') {
+      let q = dbAdmin.from('profile_scenario_responses')
+        .select('id, response, reasoning_chain, emotional_arc, confidence, created_at', { count: 'exact' });
+
+      if (allowed.has('confidence_min') && p.get('confidence_min')) {
+        const cmin = Number(p.get('confidence_min'));
+        if (!Number.isNaN(cmin)) q = q.gte('confidence', cmin);
+      }
+
+      const { data, count, error } = await q.order('id').limit(SAMPLE);
+      if (error) throw err('internal', 500, error.message);
+
+      return NextResponse.json({
+        product: slug,
+        preview: true,
+        total: count ?? 0,
+        sample_size: (data ?? []).length,
+        records: data ?? [],
+        note: 'Free sample of behavioral scenario responses. Full dataset available via paid /api/v1/query endpoint.',
+      });
+    }
+
+    if (entity !== 'profile') {
+      throw err('unsupported', 400, 'Browse is available for profile and scenario_response products');
+    }
 
     // count: 'exact' returns the FULL filtered count regardless of the sample limit.
     let q = dbAdmin.from('profiles')
@@ -59,7 +75,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
       q = q.eq('mbti_label', p.get('mbti_label')!.toUpperCase());
     }
 
-    // Big Five bounds use the generated NUMERIC columns (correct numeric compare).
+    // Big Five bounds use the generated NUMERIC columns.
     for (const dir of ['min', 'max'] as const) {
       const raw = p.get(`big_five_${dir}`);
       if (!allowed.has(`big_five_${dir}`) || !raw) continue;
@@ -73,7 +89,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
     }
 
     // Dark Triad / prospect-theory / cognitive-reflection live inside `content`
-    // (matches the resolver's filter expressions exactly, so counts agree).
     for (const trait of ['machiavellianism', 'narcissism', 'psychopathy'] as const) {
       for (const dir of ['min', 'max'] as const) {
         const key = `${trait}_${dir}`; const val = p.get(key);

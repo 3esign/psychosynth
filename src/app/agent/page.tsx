@@ -3,9 +3,6 @@
 // Live Agent Demo — every psychometric archetype trades the SAME live market
 // at once. The 2D "Floor" shows them fanning apart by behavior + P&L; the equity
 // panel shows outcomes diverging over time. Same model that generated the data.
-// Viz follows the data-viz system: dots colored by decision STATE (+ always a
-// label so color never stands alone), identity via the leaderboard/hover, and
-// highlight-one over rainbow for the equity lines.
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
@@ -38,8 +35,6 @@ const TABLE: Record<Disposition, Record<Bucket, [string, string, string]>> = {
 };
 const DELTA: Record<string, number> = { BUY: +0.3, ADD: +0.5, HOLD: 0, TRIM: -0.3, SELL: -0.6, CUT: -1.0 };
 
-// Decision-STATE colors (status palette). Every dot also shows its action label,
-// so color never carries meaning alone.
 const ACT_HEX: Record<string, string> = { BUY: '#34d399', ADD: '#34d399', HOLD: '#94a3b8', TRIM: '#fbbf24', SELL: '#fb7185', CUT: '#fb7185' };
 const ACT_CLASS: Record<string, string> = {
   BUY: 'text-emerald-300 bg-emerald-500/10 border-emerald-500/30', ADD: 'text-emerald-300 bg-emerald-500/10 border-emerald-500/30',
@@ -69,16 +64,22 @@ function initSim(): Sim {
   for (const a of AGENTS) { agents[a.key] = { pos: 0.5, equity: 100, action: 'HOLD', verb: 'sizing up the tape', emotion: 'neutral', conf: 0.6 }; eqHist[a.key] = [100]; }
   return { price: 100, history: [100], move: 0, event: null, tick: 0, baseline: 100, baseHist: [100], agents, eqHist };
 }
-function step(prev: Sim, volIdx: number): Sim {
+
+function step(prev: Sim, volIdx: number, customEventOverride: { moveMultiplier: number; text: string } | null): Sim {
   const v = VOL[volIdx];
-  const g = (Math.random() + Math.random() + Math.random() - 1.5) / 1.5;
-  let move = v.drift + g * v.sigma; let event: string | null = null;
-  if (Math.random() < v.shock) {
+  let move = (v.drift + ((Math.random() + Math.random() + Math.random() - 1.5) / 1.5) * v.sigma);
+  let event: string | null = null;
+
+  if (customEventOverride) {
+    move = customEventOverride.moveMultiplier;
+    event = customEventOverride.text;
+  } else if (Math.random() < v.shock) {
     const kind = pick(['margin', 'crash', 'rip']);
     if (kind === 'margin') event = 'Margin call — add funds or be liquidated';
     else if (kind === 'crash') { move = -Math.abs(v.sigma * 3 + 0.02); event = 'Flash crash on the tape'; }
     else { move = Math.abs(v.sigma * 3 + 0.02); event = 'Parabolic run — vertical move'; }
   }
+
   const price = Math.max(1, prev.price * (1 + move));
   const history = [...prev.history, price].slice(-LEN);
   const baseline = prev.baseline * (1 + move);
@@ -97,8 +98,6 @@ function step(prev: Sim, volIdx: number): Sim {
   return { price, history, move, event, tick: prev.tick + 1, baseline, baseHist, agents, eqHist };
 }
 
-/* ---- the 2D floor: exposure (x) × P&L (y), colored by decision, only the
-   spotlight labeled; hover/click to identify the rest ---------------------- */
 function Floor({ sim, sel, onSel, hov, setHov }: { sim: Sim; sel: string; onSel: (k: string) => void; hov: string | null; setHov: (k: string | null) => void }) {
   const W = 560, H = 360, l = 46, r = 18, t = 14, b = 40, pw = W - l - r, ph = H - t - b;
   const maxExp = 1.6;
@@ -177,13 +176,31 @@ export default function AgentDemo() {
   const [playing, setPlaying] = useState(true);
   const [sel, setSel] = useState('panic-seller');
   const [hov, setHov] = useState<string | null>(null);
+  const [pendingEvent, setPendingEvent] = useState<{ moveMultiplier: number; text: string } | null>(null);
+
   const volRef = useRef(volIdx); volRef.current = volIdx;
-  useEffect(() => { if (!playing) return; const id = setInterval(() => setSim((p) => step(p, volRef.current)), 1300); return () => clearInterval(id); }, [playing]);
+
+  useEffect(() => {
+    if (!playing) return;
+    const id = setInterval(() => {
+      setSim((p) => {
+        const next = step(p, volRef.current, pendingEvent);
+        if (pendingEvent) setPendingEvent(null);
+        return next;
+      });
+    }, 1300);
+    return () => clearInterval(id);
+  }, [playing, pendingEvent]);
+
   const reset = useCallback(() => setSim(initSim()), []);
+
+  const injectEvent = (moveMultiplier: number, text: string) => {
+    setPendingEvent({ moveMultiplier, text });
+  };
 
   const agent = AGENTS.find((a) => a.key === sel)!; const st = sim.agents[sel];
   const board = [...AGENTS].sort((a, b) => sim.agents[b.key].equity - sim.agents[a.key].equity);
-  const movePct = sim.move * 100, eqPct = st.equity - 100, basePct = sim.baseline - 100;
+  const movePct = sim.move * 100, eqPct = st.equity - 100;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans antialiased relative">
@@ -192,25 +209,76 @@ export default function AgentDemo() {
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" className="text-lg font-bold text-white">Psychosynth</Link>
-            <span className="text-[10px] font-mono bg-indigo-500/10 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/20">Live Agent Demo</span>
+            <span className="text-[10px] font-mono bg-indigo-500/10 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/20">Live Agent Simulation</span>
           </div>
-          <Link href="/docs" className="text-sm text-slate-400 hover:text-slate-200">API &rarr;</Link>
+          <div className="flex items-center gap-4">
+            <Link href="/explore" className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold font-mono">Data Explorer &rarr;</Link>
+            <Link href="/docs" className="text-xs text-slate-400 hover:text-slate-200">API Docs &rarr;</Link>
+          </div>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-10 space-y-6 relative z-10">
         <div className="space-y-2 max-w-2xl">
-          <h1 className="text-3xl font-extrabold tracking-tight text-white">Same market. Different minds.</h1>
-          <p className="text-sm text-slate-400 leading-relaxed">Eight psychometric archetypes trade one <span className="text-slate-200">live feed</span> at once. Change the volatility or spotlight a profile and watch decisions, tells and P&amp;L fan apart — that divergence is the &ldquo;human variance&rdquo; Psychosynth sells.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-white">Same market. Eight psychometric minds.</h1>
+          <p className="text-sm text-slate-400 leading-relaxed">
+            Watch psychometrically conditioned agent profiles execute actions on a live feed. Inject custom market shocks below to observe behavioral divergence in real-time.
+          </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-1 bg-slate-900/60 border border-slate-800 rounded-xl p-1">
-            {VOL.map((v, i) => (<button key={v.key} onClick={() => setVolIdx(i)} className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition ${volIdx === i ? (i >= 2 ? 'bg-rose-500/20 text-rose-300' : 'bg-indigo-500/20 text-indigo-300') : 'text-slate-400 hover:text-slate-200'}`}>{v.label}</button>))}
+        {/* Interactive Control Panel */}
+        <div className="space-y-3 bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl backdrop-blur-md">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+              <span className="text-[10px] text-slate-500 font-mono px-2 uppercase font-bold">Volatility:</span>
+              {VOL.map((v, i) => (
+                <button
+                  key={v.key}
+                  onClick={() => setVolIdx(i)}
+                  className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition ${
+                    volIdx === i
+                      ? i >= 2 ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {v.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button onClick={() => setPlaying((p) => !p)} className="text-xs px-4 py-2 rounded-xl font-semibold bg-slate-900 border border-slate-800 hover:border-slate-700 text-white shadow-md">
+                {playing ? '❚❚ Pause' : '▶ Play'}
+              </button>
+              <button onClick={reset} className="text-xs px-4 py-2 rounded-xl font-semibold bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white">
+                Reset
+              </button>
+              <span className="text-[11px] font-mono text-slate-500">tick {sim.tick}</span>
+            </div>
           </div>
-          <button onClick={() => setPlaying((p) => !p)} className="text-xs px-4 py-2 rounded-xl font-semibold bg-slate-900 border border-slate-800 hover:border-slate-700 text-white">{playing ? '❚❚ Pause' : '▶ Play'}</button>
-          <button onClick={reset} className="text-xs px-4 py-2 rounded-xl font-semibold bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white">Reset</button>
-          <span className="text-[11px] font-mono text-slate-500 ml-auto">tick {sim.tick}</span>
+
+          {/* Interactive Shock Injectors */}
+          <div className="pt-2 border-t border-slate-800/60 flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] text-slate-400 font-mono font-bold uppercase shrink-0">Inject Live Market Event:</span>
+            <button
+              onClick={() => injectEvent(-0.15, '⚡ FLASH CRASH (-15% Liquidation)')}
+              className="text-xs px-3 py-1 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 font-mono font-semibold"
+            >
+              ⚡ Flash Crash (-15%)
+            </button>
+            <button
+              onClick={() => injectEvent(0.12, '🚀 PARABOLIC RALLY (+12% Euphoria)')}
+              className="text-xs px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20 font-mono font-semibold"
+            >
+              🚀 Parabolic Rally (+12%)
+            </button>
+            <button
+              onClick={() => injectEvent(-0.25, '🏦 BANK RUN / WHALE DUMP (-25%)')}
+              className="text-xs px-3 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 font-mono font-semibold"
+            >
+              🏦 Whale Dump (-25%)
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -218,7 +286,7 @@ export default function AgentDemo() {
           <div className="lg:col-span-2 rounded-2xl border border-slate-800/80 bg-slate-900/40 p-5 backdrop-blur-md">
             <div className="flex items-baseline justify-between mb-1">
               <h3 className="text-sm font-bold text-white">The Floor — one market, eight minds</h3>
-              <span className="text-[10px] text-slate-500 font-mono">position = how it&apos;s behaving now</span>
+              <span className="text-[10px] text-slate-500 font-mono">position = current risk stance</span>
             </div>
             <Floor sim={sim} sel={sel} onSel={setSel} hov={hov} setHov={setHov} />
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-400 mt-1">
