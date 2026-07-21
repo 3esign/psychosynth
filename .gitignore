@@ -47,18 +47,13 @@ supabase/.temp
 *.tsbuildinfo
 next-env.d.ts
 
-.vercel
-.env*
-
-.vercel
-.env*
-
-# working artifacts & sub-package deps (added by bankr integration commit)
+# working artifacts & sub-package deps
 .backup-corrupted-20260712/
 .sync_probe.txt
 curl_out.txt
 git_diff.txt
 tc_run.log
+_to_delete/
 mcp/node_modules/
 mcp/dist/
 packages/**/node_modules/

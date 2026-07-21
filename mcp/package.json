@@ -1,7 +1,7 @@
 {
   "name": "psychosynth-mcp",
   "version": "0.1.0",
-  "description": "MCP server for the Psychosynth synthetic psychometric data marketplace — discover the catalog, fetch free deterministic previews, get x402 price quotes, and run paid queries with your own wallet.",
+  "description": "MCP server for the Psychosynth synthetic psychometric data marketplace \u2014 discover the catalog, fetch free deterministic previews, get x402 price quotes, and run paid queries with your own wallet.",
   "type": "module",
   "bin": {
     "psychosynth-mcp": "dist/index.js"
@@ -37,5 +37,11 @@
   "devDependencies": {
     "@types/node": "^20",
     "typescript": "^5"
+  },
+  "overrides": {
+    "axios": "^1.18.1",
+    "postcss": "^8.5.20",
+    "ws": "^8.21.1",
+    "uuid": "^11.1.1"
   }
 }

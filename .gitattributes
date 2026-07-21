@@ -1,0 +1,13 @@
+# Normalize line endings: LF in the repo, native handling per-platform on checkout.
+# After adding this file, run once:  git add --renormalize . && git commit -m "chore: normalize line endings"
+* text=auto
+
+# Explicit LF for files executed in POSIX environments
+*.sh text eol=lf
+
+# Binary assets
+*.ico binary
+*.png binary
+*.jpg binary
+*.woff binary
+*.woff2 binary

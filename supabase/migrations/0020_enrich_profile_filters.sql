@@ -1,4 +1,6 @@
 -- 0020_enrich_profile_filters.sql
+-- NOTE: there is no migration 0019 — the number was skipped; the sequence
+-- intentionally jumps 0018 -> 0020. Nothing is missing.
 -- Unlock the full filterable surface on the Personality Profile Library.
 --
 -- The resolver (src/modules/recipes/resolver.ts) already implements Dark Triad,
