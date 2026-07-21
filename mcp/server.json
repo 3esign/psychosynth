@@ -3,7 +3,7 @@
   "name": "io.github.3esign/psychosynth",
   "description": "Discover and query Psychosynth synthetic psychometric data (Big Five profiles, cognitive biases, profile-conditioned behavioral responses) over the x402 protocol. Free catalog, free deterministic previews, and price quotes; paid queries settle in USDC on Base using your own wallet.",
   "repository": {
-    "url": "https://github.com/3esign/cfaces",
+    "url": "https://github.com/3esign/psychosynth.git",
     "source": "github"
   },
   "version": "0.1.0",

@@ -10,7 +10,7 @@
       "psychosynth-mcp"
     ],
     "env": {
-      "PSYCHOSYNTH_API_URL": "https://your-deployment.vercel.app",
+      "PSYCHOSYNTH_API_URL": "https://psychosynth.vercel.app",
       "BUYER_PRIVATE_KEY": "0xYourPrivateKey"
     }
   },
