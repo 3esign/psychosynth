@@ -107,6 +107,19 @@ const publicClient = createPublicClient({ chain: base, transport: http(rpcUrl) }
 
 const solanaRpcUrl = process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';
 
+// Solana finality is checked against this RPC on every self-settled payment. The
+// public mainnet endpoint is heavily rate-limited and unsuitable for a payment
+// path in production — a 429 surfaces to a paying buyer as a `not_ready`/`infra`
+// retry and costs conversions. Warn loudly (once, at boot) if a Solana payout is
+// configured but no dedicated RPC is, mirroring the rate limiter's Upstash guard.
+if (solanaPayoutAddress && !process.env.SOLANA_RPC_URL && isProduction) {
+  console.error(
+    '[payment-verify] SOLANA_PAYOUT_ADDRESS is set but SOLANA_RPC_URL is not — Solana ' +
+    'payment verification is using the public mainnet RPC, which rate-limits and will ' +
+    'intermittently fail paid queries. Configure a dedicated RPC (e.g. Helius / QuickNode / Triton).',
+  );
+}
+
 const minEvmConfirmations = (() => {
   const n = BigInt(process.env.MIN_EVM_CONFIRMATIONS || '1');
   return n < BigInt(1) ? BigInt(1) : n;

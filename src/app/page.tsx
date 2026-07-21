@@ -16,11 +16,11 @@ export default async function LandingPage() {
     { name: 'Bankr', tag: 'Live', badge: 'bg-amber-500/10 border-amber-500/20 text-amber-300', blurb: 'Bankr agents discover the catalog and pay per query in gasless USDC via the Psychosynth skill.', href: 'https://skills.bankr.bot', external: true, cta: 'View on Bankr' },
     { name: 'x402-fetch', tag: 'Live', badge: 'bg-amber-500/10 border-amber-500/20 text-amber-300', blurb: 'Any agent using x402-fetch settles out of the box — no API keys, no signup.', href: '/api/v1/discovery', external: false, cta: 'Discovery' },
     { name: 'MCP', tag: 'Native', badge: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300', blurb: 'A standard MCP server exposes list, preview, quote and query as agent tools.', href: 'https://modelcontextprotocol.io', external: true, cta: 'Learn more' },
-    { name: 'ElizaOS', tag: 'Available', badge: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300', blurb: 'Connect through @elizaos/plugin-mcp in your agent character config.', href: '/connect', external: false, cta: 'Setup' },
-    { name: 'OpenClaw', tag: 'Available', badge: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300', blurb: 'Add via MCPorter: openclaw mcp add psychosynth.', href: '/connect', external: false, cta: 'Setup' },
-    { name: 'Hermes', tag: 'Available', badge: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300', blurb: 'Nous Research agents register the server over stdio in their config.', href: '/connect', external: false, cta: 'Setup' },
-    { name: 'Solana Agent Kit', tag: 'Available', badge: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300', blurb: 'Solana-native agents settle payments in USDC-SPL on Solana.', href: '/connect', external: false, cta: 'Setup' },
-    { name: 'Virtuals · ACP', tag: 'Planned', badge: 'bg-slate-600/20 border-slate-600/30 text-slate-400', blurb: 'Provider integration for the Virtuals agent economy (escrowed USDC on Base).', href: '/connect', external: false, cta: 'Roadmap' },
+    { name: 'ElizaOS', tag: 'Available', badge: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300', blurb: 'Connect through @elizaos/plugin-mcp in your agent character config.', href: '/docs', external: false, cta: 'Setup' },
+    { name: 'OpenClaw', tag: 'Available', badge: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300', blurb: 'Add via MCPorter: openclaw mcp add psychosynth.', href: '/docs', external: false, cta: 'Setup' },
+    { name: 'Hermes', tag: 'Available', badge: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300', blurb: 'Nous Research agents register the server over stdio in their config.', href: '/docs', external: false, cta: 'Setup' },
+    { name: 'Solana Agent Kit', tag: 'Available', badge: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300', blurb: 'Solana-native agents settle payments in USDC-SPL on Solana.', href: '/docs', external: false, cta: 'Setup' },
+    { name: 'Virtuals · ACP', tag: 'Planned', badge: 'bg-slate-600/20 border-slate-600/30 text-slate-400', blurb: 'Provider integration for the Virtuals agent economy (escrowed USDC on Base).', href: '/docs', external: false, cta: 'Roadmap' },
   ];
 
   return (
@@ -41,7 +41,13 @@ export default async function LandingPage() {
           <p className="text-lg text-slate-400 leading-relaxed font-sans">
             Synthetic psychometric data built on the Five-Factor Model (OCEAN). Grounded, curated, and cryptographic behavioral datasets sold directly to autonomous agents over the x402 protocol on Base mainnet.
           </p>
-          <div className="flex gap-4 pt-2">
+          <div className="flex flex-wrap gap-4 pt-2">
+            <Link
+              href="/agent"
+              className="inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-tr from-indigo-600 to-purple-650 hover:brightness-110 text-white rounded-xl font-semibold transition-all shadow-lg shadow-indigo-500/10"
+            >
+              &#9654; Live Agent Demo
+            </Link>
             <a
               href="/docs"
               className="inline-flex items-center justify-center px-5 py-2.5 bg-slate-900 hover:bg-slate-850 text-white rounded-xl border border-slate-800 font-semibold transition-all hover:border-slate-700 shadow-md"
@@ -50,9 +56,9 @@ export default async function LandingPage() {
             </a>
             <Link
               href="/lab"
-              className="inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-tr from-indigo-600 to-purple-650 hover:brightness-110 text-white rounded-xl font-semibold transition-all shadow-lg shadow-indigo-500/10"
+              className="inline-flex items-center justify-center px-5 py-2.5 bg-slate-900 hover:bg-slate-850 text-white rounded-xl border border-slate-800 font-semibold transition-all hover:border-slate-700 shadow-md"
             >
-              Enter Curation Cockpit &rarr;
+              Curation Cockpit &rarr;
             </Link>
           </div>
         </header>
