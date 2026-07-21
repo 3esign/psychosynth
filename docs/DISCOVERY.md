@@ -181,3 +181,12 @@ Submit by forking BankrBot/skills, copying the folder to the repo root as `psych
 
 ### Rail 3 — Registry indexing (DEFERRED, deliberate)
 x402 Cloud deployment (auto-indexing in the Bankr registry, Bankr as gas-covering facilitator) is deferred until the skill PR proves demand: the skills catalog is the higher-traffic surface, it costs nothing, and maintaining two deployment paths before the first dollar arrives is overhead without signal. The free `/api/v1/discovery` endpoint plus the skill give registry crawlers and web-searching agents everything they need in the meantime. Revisit after merge if agents start arriving via registry search.
+
+### Future Integration Ideas
+
+The following concepts are experimental integration patterns worth exploring within the Bankr ecosystem:
+
+- **Doppler token launches**: The `robinhood-counterparty-pack` could plausibly be used to simulate retail personas against bonding curve parameters for launches on Robinhood chain and Base — worth testing before treating it as a real workflow.
+- **Trading guardrails**: The `cognitive-bias-simulator`'s bias models could in theory be checked against Avantis or Hyperliquid trade setups to flag risky patterns, though this isn't a built integration today.
+- **x402 pricing**: The `behavioral-response-library`'s profile-conditioned responses could inform how agents approach counterparty negotiation for x402 services, but there's no confirmed mechanism for dynamic pricing based on reliability/risk profiles yet.
+- **App personalization**: For apps built via `create_app`, the `personality-profile-library`'s prospect-theory vectors could be used to tailor UX — e.g. different signal styles for different risk profiles — as a design direction rather than a shipped feature.
