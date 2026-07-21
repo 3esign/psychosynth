@@ -91,14 +91,21 @@ const DOMAINS = {
       'macro allocator', 'retail momentum chaser', 'algorithmic market-maker', 'value investor',
       'prop-desk scalper', 'DeFi yield farmer', 'commodities speculator', 'index-fund holdout',
       'futures spreader', 'volatility arbitrageur', 'penny-stock gambler', 'pairs trader',
-      'dividend-yield chaser', 'onchain copy-trader'],
+      'dividend-yield chaser', 'onchain copy-trader',
+      // 2026-07-21 additive widening (enrichment v4)
+      'perps degen', 'bonding-curve sniper', 'airdrop farmer', 'liquidation-bot operator',
+      'meme-coin rotator', 'delta-neutral market maker', 'MEV searcher', 'zero-DTE options gambler'],
     details: ['checks the P&L blotter forty times before lunch', 'sizes every position at exactly 2% risk',
       'holds a bag from 2021 out of pure spite', 'sets stop-losses then cancels them at the open',
       'backtests for months but front-runs the model on impulse', 'averages down on a name three times in a week',
       'keeps a losing-trade journal they never re-read', 'exits winners at the first green candle',
       'names every strategy after the trade that almost worked', "trusts the chart more than the fundamentals and won't say why",
       'refreshes the order book compulsively during lunch', 'treats a green week as proof of skill and a red one as proof of bad luck',
-      'keeps three monitors for a portfolio that fits on one screen', 'talks in win rate and never mentions size'],
+      'keeps three monitors for a portfolio that fits on one screen', 'talks in win rate and never mentions size',
+      // 2026-07-21 additive widening (enrichment v4)
+      'apes the launch before the contract is verified', 'screenshots the winners and never the losers',
+      'rotates the whole book into whatever is pumping this hour', 'calls a 90% drawdown a long-term hold',
+      'sets alerts for a coin they already checked a minute ago', 'confuses a bull market for a trading edge'],
   },
   negotiation: {
     skew: { agreeableness: -0.05 },
@@ -348,11 +355,19 @@ const INTENSITY = ['measured', 'steady', 'pronounced', 'intense', 'extreme'];
 const STRESS_LEAD = ['Under pressure', 'When the stakes rise', 'In a pinch', 'When cornered',
   'Once things get tense', 'The moment risk appears', 'Under a deadline',
   'When the walls close in', "The instant the deadline moves up", 'When there is no clean exit',
-  'As soon as real money or reputation is on the line'];
+  'As soon as real money or reputation is on the line',
+  // 2026-07-21 additive widening (enrichment v4): more stress leads
+  'When the downside gets concrete', 'The moment it stops being hypothetical', 'When the number turns red',
+  'Once the exit narrows to one door', 'When someone is watching the outcome', 'The instant it becomes irreversible',
+  'When the safe option quietly expires'];
 const DAILY_LEAD = ['day to day', 'on an ordinary week', 'in the small things', 'left to their own devices',
   'in the routine of it', 'when no one is watching', 'as a rule',
   'without an audience', 'when the stakes are trivial', 'across an ordinary week',
-  'in the pattern nobody else tracks'];
+  'in the pattern nobody else tracks',
+  // 2026-07-21 additive widening (enrichment v4): more daily leads
+  'on a slow afternoon', 'in the parts nobody grades', 'once the urgency drains out',
+  'in the unglamorous middle of things', 'when the pressure is off', 'in the version no one reviews',
+  'across the quiet stretches'];
 
 // --------------------------------------------------- trait -> bias mapping --
 function biasAffinities(bf) {

@@ -1,7 +1,22 @@
+// ⚠️ DEPRECATED 2026-07-21 — superseded by scripts/enrich-dataset.mjs (v4).
+// This script inserted LOW-QUALITY data: near-identical per-archetype summaries
+// (only numbers differ, with literal `$\lambda$` LaTeX), BUY/SELL responses
+// cycled by array index (unconditioned on the profile), and `batch-<name>-<i>`
+// tag pollution. Its output is cleaned up by outputs/enrich-v4/05_repair_v3.sql.
+// Kept for historical reference only. Use the offline authored engine instead:
+//   node scripts/enrich-dataset.mjs --profiles 4000 --responses 4000 --seed <seed>
 import { createClient } from '@supabase/supabase-js';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
+
+if (!process.argv.includes('--i-know-this-is-deprecated')) {
+  console.error(
+    'populate-v3-dataset.ts is DEPRECATED (low-quality output). ' +
+    'Use scripts/enrich-dataset.mjs. To override, pass --i-know-this-is-deprecated.'
+  );
+  process.exit(1);
+}
 
 function loadEnv() {
   const p = path.join(process.cwd(), '.env');

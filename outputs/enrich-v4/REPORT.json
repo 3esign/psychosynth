@@ -1,0 +1,31 @@
+{
+  "profiles": 4000,
+  "responses": 4000,
+  "scenarios": 80,
+  "distinctSummaryRatio": 1,
+  "maxPrefixDup": 49,
+  "distinctSummaries": 4000,
+  "uniqueTags": 120,
+  "batchTagged": 0,
+  "badTag": 0,
+  "schemaViolations": 0,
+  "lambda": {
+    "min": 0.5,
+    "max": 3.97,
+    "mean": 1.86
+  },
+  "meanNeuroticismByPostureBucket": {
+    "bold": 0.605,
+    "impulsive": 0.71,
+    "calculating": 0.264,
+    "cautious": 0.425
+  },
+  "packCoverage": {
+    "robinhood-counterparty-pack (robinhood|retail-trading)": 1200,
+    "solana-trading-pack (chain:solana)": 871,
+    "chain:base": 500,
+    "crypto-whale": 579,
+    "x402": 300
+  },
+  "postureNeuroticismSpread": 0.446
+}

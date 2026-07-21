@@ -93,3 +93,43 @@ seed per batch to avoid regenerating identical content.
 (300 profiles / 120 scenarios / 80 responses) confirmed: 0 schema violations,
 0 MBTI-rule violations, 0 unknown bias slugs, balanced trait means (~0.5) and
 decision-style distribution, and 14+ distinct emotional patterns exercised.
+
+---
+
+## v4 — bulk enrichment orchestrator (`scripts/enrich-dataset.mjs`)
+
+The v4 pipeline scales the authored engine into a single reproducible batch and
+emits **SQL files** (not client inserts) so data reaches the DB reviewably. It
+supersedes `populate-v3-dataset.ts`, whose output had three defects it fixes:
+
+| v3 defect | v4 fix |
+|---|---|
+| near-identical summaries (one template per archetype, only numbers differ) | `synth.buildSummary` — combinatorial, 100% distinct, no `$\lambda$` LaTeX |
+| unconditioned BUY/SELL responses (`actions[i % 6]`) | `behavior.buildResponse` — action derived from trait posture + top bias + scenario |
+| `batch-<name>-<i>` tag pollution | clean kebab-case tags with the pack pins, no batch tags |
+| Dark-Triad / prospect-theory from uniform noise | `lib/psychometrics.js` — derived coherently from Big Five + biases, archetype-anchored |
+
+New modules:
+
+- **`scripts/lib/psychometrics.js`** — derives `dark_triad`, `prospect_theory`
+  (λ/α/β) and `cognitive_reflection` from the Big Five vector + chosen biases,
+  with optional per-archetype anchors; `buildFullProfile()` assembles the row.
+- **`scripts/lib/archetypes.js`** — 44 archetypes (22 legacy solana/retail/whale
+  + 22 fresh: Base-native degens, Doppler bonding-curve whale-vs-retail, a2a/x402
+  counterparty negotiators, extra Robinhood retail sub-segments). Tag pins match
+  the live recipes (`chain:solana`, `robinhood`+`retail-trading`).
+- **`scripts/lib/synth.js`** — content banks widened additively (same exports).
+
+Run:
+
+```bash
+node scripts/enrich-dataset.mjs --dry                    # quality gates, no writes
+node scripts/enrich-dataset.mjs --profiles 4000 --responses 4000 --seed <seed>
+# -> outputs/enrich-v4/{00..05}.sql + APPLY_ALL.sql + REPORT.json  (see that folder's README)
+```
+
+The orchestrator refuses to write SQL unless quality gates pass (distinct
+summary ratio ≥ 0.98, zero batch/malformed tags, zero schema violations, and
+posture buckets demonstrably separated by neuroticism). The 4,000/4,000 batch
+was loaded into a scratch PostgreSQL 16 against the real schema to confirm every
+FK, jsonb cast and `ON CONFLICT` clause is valid before shipping.

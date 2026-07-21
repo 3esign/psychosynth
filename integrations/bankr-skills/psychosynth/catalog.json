@@ -7,7 +7,7 @@
   "demo": {
     "title": "psychosynth.sh",
     "language": "bash",
-    "code": "# Free preflight — products, prices, payment surface\nbankr prompt \"Using the psychosynth skill, run discovery\"\n\n# Free deterministic preview — verify record shape before paying\nbankr prompt \"Using the psychosynth skill, preview the behavioral response library\"\n\n# Paid query — behavioral priors for a trading sim (USDC on Base via x402)\nbankr prompt \"Using the psychosynth skill, get 20 high-loss-aversion panic-prone profiles for my counterparty simulation\"\n\n# Paid query — profile-conditioned crisis responses\nbankr prompt \"Using the psychosynth skill, fetch trading-scenario responses with confidence at least 0.7\""
+    "code": "# Free preflight — products, prices, payment surface\nbankr prompt \"Using the psychosynth skill, run discovery\"\n\n# Free deterministic preview — verify record shape before paying\nbankr prompt \"Using the psychosynth skill, preview the behavioral response library\"\n\n# Paid query — behavioral priors for a trading sim (USDC on Base via x402)\nbankr prompt \"Using the psychosynth skill, get 20 high-loss-aversion panic-prone profiles for my counterparty simulation\"\n\n# Paid pack — Robinhood retail counterparties for backtesting\nbankr prompt \"Using the psychosynth skill, buy the 100-persona Robinhood counterparty pack\"\n\n# Paid query — profile-conditioned crisis responses\nbankr prompt \"Using the psychosynth skill, fetch trading-scenario responses with confidence at least 0.7\""
   },
   "setup": [
     "Install: `npx skills add psychosynth` or ask Bankr to install from the repo URL",
