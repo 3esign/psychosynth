@@ -48,6 +48,12 @@ export default async function LandingPage() {
             >
               &#9654; Live Agent Demo
             </Link>
+            <Link
+              href="/explore"
+              className="inline-flex items-center justify-center px-5 py-2.5 bg-slate-900 hover:bg-slate-850 text-white rounded-xl border border-slate-800 font-semibold transition-all hover:border-slate-700 shadow-md"
+            >
+              Explore Data &rarr;
+            </Link>
             <a
               href="/docs"
               className="inline-flex items-center justify-center px-5 py-2.5 bg-slate-900 hover:bg-slate-850 text-white rounded-xl border border-slate-800 font-semibold transition-all hover:border-slate-700 shadow-md"
