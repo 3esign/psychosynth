@@ -6,9 +6,10 @@
 //
 // Usage: node generate_all.mjs [seed]
 import { writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 const SEED = Number(process.argv[2] ?? 42);
-const OUT = new URL('./out/', import.meta.url).pathname;
+const OUT = fileURLToPath(new URL('./out/', import.meta.url));
 
 // ---- deterministic RNG + helpers -----------------------------------------
 function mulberry32(a){return function(){a|=0;a=(a+0x6D2B79F5)|0;let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};}
