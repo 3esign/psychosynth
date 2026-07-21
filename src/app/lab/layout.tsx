@@ -43,8 +43,14 @@ export default async function LabLayout({ children }: { children: React.ReactNod
       redirect('/lab/login');
     }
 
-    const allow = (process.env.ADMIN_EMAILS ?? 'owner@example.com').split(',').map(s => s.trim());
-    isAllowed = allow.includes(user.email || '');
+    // Fail CLOSED: with no ADMIN_EMAILS configured the allowlist is empty and
+    // access is denied, matching the API guard in modules/core/auth.ts rather
+    // than falling back to a guessable default address.
+    const allow = (process.env.ADMIN_EMAILS ?? '')
+      .split(',')
+      .map(s => s.trim().toLowerCase())
+      .filter(Boolean);
+    isAllowed = allow.includes((user.email || '').toLowerCase());
 
     if (!isAllowed) {
       return (

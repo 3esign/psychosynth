@@ -1,8 +1,7 @@
 # Psychosynth
 
-[![Build Status](https://github.com/3esign/cfaces/actions/workflows/build.yml/badge.svg)](https://github.com/3esign/cfaces/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Payments: x402](https://img.shields.io/badge/Payments-x402%20Base-blue)](https://github.com/3esign/cfaces)
+[![Payments: x402](https://img.shields.io/badge/Payments-x402%20Base-blue)](https://github.com/3esign/psychosynth)
 [![MCP: Supported](https://img.shields.io/badge/MCP-Supported-green)](https://modelcontextprotocol.io)
 
 Psychosynth is an agent-native, on-chain psychometric data marketplace. It delivers high-variance, human-curated personality profiles and profile-conditioned behavioral responses to autonomous systems. Settle transactions query-by-query in USDC on Base using the **x402 micro-payment protocol**—completely free of human intermediaries.
@@ -58,8 +57,8 @@ Psychosynth exposes an MCP server to connect directly with autonomous agent runt
 ### Quick Start
 1. Clone the repository and install dependencies:
    ```bash
-   git clone https://github.com/3esign/cfaces.git
-   cd cfaces
+   git clone https://github.com/3esign/psychosynth.git
+   cd psychosynth
    npm install
    ```
 
@@ -84,14 +83,16 @@ Psychosynth exposes an MCP server to connect directly with autonomous agent runt
 
 ## MCP Server Configuration
 
-To register the Psychosynth MCP server with your local agent, add the following entry to your MCP client config (e.g. `claude_desktop_config.json`):
+Build the MCP server (`npm run build` inside `mcp/`), then register it with your agent by adding
+the following entry to your MCP client config (e.g. `claude_desktop_config.json`). Use the
+absolute path to the built server on your machine:
 
 ```json
 {
   "mcpServers": {
     "psychosynth": {
       "command": "node",
-      "args": ["d:/Projekti/faces/mcp/dist/index.js"],
+      "args": ["/absolute/path/to/psychosynth/mcp/dist/index.js"],
       "env": {
         "PSYCHOSYNTH_API_URL": "https://psychosynth.vercel.app",
         "BUYER_PRIVATE_KEY": "0xYourBuyerWalletPrivateKey",
@@ -115,9 +116,9 @@ To register the Psychosynth MCP server with your local agent, add the following 
 ## Documentation
 
 Full architectural specifications, master plans, and developer logs reside in the `docs/` folder:
-- [MASTERPLAN.md](file:///d:/Projekti/faces/docs/MASTERPLAN.md) — Product vision and economic structures.
-- [DISCOVERY.md](file:///d:/Projekti/faces/docs/DISCOVERY.md) — Framework-specific agent integration details.
-- [DEVELOPMENT.md](file:///d:/Projekti/faces/docs/DEVELOPMENT.md) — Detailed engineering specs and database schema designs.
+- [MASTERPLAN.md](./docs/MASTERPLAN.md) — Product vision and economic structures.
+- [DISCOVERY.md](./docs/DISCOVERY.md) — Framework-specific agent integration details.
+- [DEVELOPMENT.md](./docs/DEVELOPMENT.md) — Detailed engineering specs and database schema designs.
 
 ---
 

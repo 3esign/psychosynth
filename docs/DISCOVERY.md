@@ -6,7 +6,7 @@ This document outlines the developer integration standards to make Psychosynth's
 
 ## 1. Standard Model Context Protocol (MCP) Setup
 
-Psychosynth exposes an MCP server located in [mcp/](file:///d:/Projekti/faces/mcp) that translates our catalog, previews, quotes, and x402 paid queries into standard LLM tools.
+Psychosynth exposes an MCP server located in [mcp/](../mcp) that translates our catalog, previews, quotes, and x402 paid queries into standard LLM tools.
 
 ### Claude Desktop & Generic MCP Clients
 To connect the server locally, add this block to the client's configuration file (e.g., `claude_desktop_config.json`):
@@ -16,7 +16,7 @@ To connect the server locally, add this block to the client's configuration file
   "mcpServers": {
     "psychosynth": {
       "command": "node",
-      "args": ["d:/Projekti/faces/mcp/dist/index.js"],
+      "args": ["/absolute/path/to/psychosynth/mcp/dist/index.js"],
       "env": {
         "PSYCHOSYNTH_API_URL": "https://your-deployment.vercel.app",
         "BUYER_PRIVATE_KEY": "0xYourBuyerWalletPrivateKey",
@@ -37,7 +37,7 @@ OpenClaw manages MCP servers via **MCPorter**. Connect the Psychosynth MCP serve
 #### CLI Configuration
 Run this command from your OpenClaw runtime directory:
 ```bash
-openclaw mcp add psychosynth node d:/Projekti/faces/mcp/dist/index.js --env PSYCHOSYNTH_API_URL="https://your-deployment.vercel.app" BUYER_PRIVATE_KEY="0xYourPrivateKey"
+openclaw mcp add psychosynth node /absolute/path/to/psychosynth/mcp/dist/index.js --env PSYCHOSYNTH_API_URL="https://your-deployment.vercel.app" BUYER_PRIVATE_KEY="0xYourPrivateKey"
 ```
 
 #### Manual JSON Config (`mcporter.json`):
@@ -47,7 +47,7 @@ openclaw mcp add psychosynth node d:/Projekti/faces/mcp/dist/index.js --env PSYC
     "servers": {
       "psychosynth": {
         "command": "node",
-        "args": ["d:/Projekti/faces/mcp/dist/index.js"],
+        "args": ["/absolute/path/to/psychosynth/mcp/dist/index.js"],
         "env": {
           "PSYCHOSYNTH_API_URL": "https://your-deployment.vercel.app",
           "BUYER_PRIVATE_KEY": "0xYourPrivateKey"
@@ -76,7 +76,7 @@ ElizaOS connects to MCP servers using `eliza-plugin-mcp`.
       "servers": {
         "psychosynth": {
           "command": "node",
-          "args": ["d:/Projekti/faces/mcp/dist/index.js"],
+          "args": ["/absolute/path/to/psychosynth/mcp/dist/index.js"],
           "env": {
             "PSYCHOSYNTH_API_URL": "https://your-deployment.vercel.app",
             "BUYER_PRIVATE_KEY": "0xYourPrivateKey"
@@ -101,7 +101,7 @@ Hermes Agents consume MCP servers via direct stdio bindings in their Elixir/Node
       {
         "name": "psychosynth",
         "command": "node",
-        "args": ["d:/Projekti/faces/mcp/dist/index.js"],
+        "args": ["/absolute/path/to/psychosynth/mcp/dist/index.js"],
         "env": {
           "PSYCHOSYNTH_API_URL": "https://your-deployment.vercel.app",
           "BUYER_PRIVATE_KEY": "0xYourPrivateKey"
@@ -152,7 +152,7 @@ Virtuals Protocol agents execute tasks on-chain using the **G.A.M.E. Framework**
 To ensure seamless day-one discoverability, complete the following items prior to shipping the first public release:
 
 1. **Publish to npm**: 
-   - Compile [psychosynth-mcp](file:///d:/Projekti/faces/mcp) and publish it to the npm registry.
+   - Compile [psychosynth-mcp](../mcp) and publish it to the npm registry.
    - This allows developers to run the server instantly using `npx`:
      ```bash
      npx psychosynth-mcp
