@@ -18,28 +18,54 @@
  *
  * Env: PSYCHOSYNTH_BASE_URL (default https://psychosynth.vercel.app),
  *      X_PAYMENT (base64 x402 header — enables paid mode where relevant).
+ *
+ * Reliability: free (unpaid) GETs are retried up to 2 extra times on network
+ * errors and transient 5xx responses. Paid calls are NEVER auto-retried —
+ * replaying a signed X-PAYMENT header after an ambiguous failure risks
+ * burning the one-time EIP-3009 authorization.
  */
+
+import { pathToFileURL } from 'node:url';
+import { realpathSync } from 'node:fs';
 
 const BASE = (process.env.PSYCHOSYNTH_BASE_URL || 'https://psychosynth.vercel.app').replace(/\/+$/, '');
 const XPAY = process.env.X_PAYMENT || '';
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
 async function getJSON(pathAndQuery, { paid = false } = {}) {
   const headers = { accept: 'application/json' };
-  if (paid && XPAY) headers['X-PAYMENT'] = XPAY;
-  let res, text;
-  try {
-    res = await fetch(BASE + pathAndQuery, { headers });
-    text = await res.text();
-  } catch (e) {
-    throw new Error(`network error calling ${pathAndQuery}: ${e.message}`);
+  const sendsPayment = paid && !!XPAY;
+  if (sendsPayment) headers['X-PAYMENT'] = XPAY;
+  // Never auto-retry a request that carries a payment header (see header note).
+  const attempts = sendsPayment ? 1 : 3;
+  let lastErr = null;
+  for (let i = 0; i < attempts; i++) {
+    if (i > 0) await sleep(400 * i);
+    let res, text;
+    try {
+      res = await fetch(BASE + pathAndQuery, { headers });
+      text = await res.text();
+    } catch (e) {
+      lastErr = new Error(`network error calling ${pathAndQuery}: ${e.message}`);
+      continue;
+    }
+    if (res.status >= 500 && i < attempts - 1) {
+      lastErr = new Error(`${pathAndQuery} returned HTTP ${res.status}`);
+      continue;
+    }
+    let json = null;
+    try { json = JSON.parse(text); } catch { /* leave null */ }
+    return { status: res.status, json, text };
   }
-  let json = null;
-  try { json = JSON.parse(text); } catch { /* leave null */ }
-  return { status: res.status, json, text };
+  throw lastErr || new Error(`request failed: ${pathAndQuery}`);
 }
 
 const id8 = (x) => String(x || '').slice(0, 8);
 const num = (x) => (x === undefined || x === null ? 'n/a' : x);
+// PostgREST embeds are objects today, but to-many shapes come back as arrays.
+// Normalize so a server-side join change can't silently break rendering.
+const one = (x) => (Array.isArray(x) ? (x[0] ?? null) : (x ?? null));
 
 // ------------------------------------------------------- renderers (pure) ----
 export function renderDoppler(json, { paid } = {}) {
@@ -75,7 +101,9 @@ export function renderGuardrails(json) {
 }
 
 export function renderNegotiation(json, category) {
-  const recs = ((json && json.records) || []).filter((r) => !category || (r.scenarios && r.scenarios.category === category));
+  const recs = ((json && json.records) || [])
+    .map((r) => ({ ...r, scenarios: one(r.scenarios), profiles: one(r.profiles) }))
+    .filter((r) => !category || (r.scenarios && r.scenarios.category === category));
   return recs.flatMap((r) => [
     `Scenario: ${(r.scenarios && r.scenarios.title) ?? 'n/a'} [${(r.scenarios && r.scenarios.category) ?? ''}]`,
     `  Counterparty: ${(r.profiles && r.profiles.mbti_label) ?? '?'} / ${(r.profiles && r.profiles.decision_style) ?? '?'}`,
@@ -202,5 +230,16 @@ async function main() {
 }
 
 // Run only when invoked directly (so the renderers can be imported for tests).
-const invokedDirectly = process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href;
+// pathToFileURL + realpath is the robust comparison: a hand-built
+// `file://${argv[1]}` URL breaks on percent/hash characters in paths and on
+// symlinked installs (import.meta.url is the realpath), silently turning the
+// CLI into a no-op that exits 0 with no output.
+let invokedDirectly = false;
+try {
+  if (process.argv[1]) {
+    let argPath = process.argv[1];
+    try { argPath = realpathSync(argPath); } catch { /* keep as-is */ }
+    invokedDirectly = import.meta.url === pathToFileURL(argPath).href;
+  }
+} catch { invokedDirectly = false; }
 if (invokedDirectly) main();

@@ -16,12 +16,22 @@ if ! command -v jq >/dev/null 2>&1 || ! printf '{}' | jq -e . >/dev/null 2>&1; t
   exec node "$SCRIPT_DIR/../psychosynth.mjs" negotiation "$@"
 fi
 
+# Transient-failure tolerance for FREE endpoints: retry twice on network/5xx
+# blips so a cold start or a momentary upstream 500 doesn't fail the workflow.
+# (--retry-all-errors needs curl >= 7.71; feature-detect so older curls still
+# run. Paid X_PAYMENT calls are NEVER retried — replaying a signed EIP-3009
+# authorization after an ambiguous failure is unsafe.)
+# -f: a failed attempt must emit NO body, otherwise the retried 200 body
+# gets concatenated after the 5xx error body and corrupts the jq parse.
+CURL_RETRY="-f --retry 2 --retry-delay 1"
+curl --help all 2>/dev/null | grep -q -- --retry-all-errors && CURL_RETRY="$CURL_RETRY --retry-all-errors"
+
 CATEGORY="${1:-}"
 
 echo "=== x402 Counterparty Negotiation Simulation ==="
 echo "Fetching behavioral responses${CATEGORY:+ (category: $CATEGORY)}..."
 
-RESPONSES=$(curl -sS "$PSYCHOSYNTH_BASE_URL/api/v1/preview/behavioral-response-library")
+RESPONSES=$(curl -sS $CURL_RETRY "$PSYCHOSYNTH_BASE_URL/api/v1/preview/behavioral-response-library")
 
 echo ""
 echo "=== Counterparty Reactions ==="

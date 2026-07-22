@@ -50,6 +50,16 @@ psql "$DATABASE_URL" -f outputs/enrich-v4/05_repair_v3.sql        # review first
 # if generated: psql "$DATABASE_URL" -f outputs/doppler-a2a-v1/APPLY_ALL.sql
 ```
 
+> **Order matters — and this step is NOT optional.** As of 2026-07-22 the live
+> solana-trading-pack preview still serves `batch-solana-retry-*` tagged
+> personas, which means `APPLY_ALL.sql` + `05_repair_v3.sql` have not been
+> applied to production. The repair deletes every `batch-*` profile (that IS
+> the old solana data), so `APPLY_ALL.sql` — which contains the 871 clean
+> `chain:solana` replacements — must run first. `05_repair_v3.sql` now has a
+> built-in precheck that aborts if the replacements are missing, and
+> `scripts/smoke.sh` has a `tag-hygiene/*` check that fails until the cleanup
+> has landed (and catches it ever coming back).
+
 ## Step 4 — Verify the live surface (free, real deployment, no mock)
 
 ```bash
