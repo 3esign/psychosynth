@@ -29,7 +29,7 @@ Avantis / Hyperliquid / perps simulations.
 - New perp scenarios in `scripts/lib/behavior.js` (category `trading`): funding
   flip, maintenance-margin call, liquidation cascade, basis blowout.
 
-**Schema change.** `0022_perp_psychology_pack.sql`: `perp-psychology-gen`
+**Schema change.** `0024_perp_psychology_pack.sql`: `perp-psychology-gen`
 generator, a recipe pinned to `tags_include:['perp-trading']`, and the
 `perp-psychology-pack` product (pack tiers). Add leverage filters to the
 recipe's `allow_request_filters` (`funding_sensitivity_min/max`,

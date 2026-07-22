@@ -348,6 +348,24 @@ const BIAS_QUIRK = {
   'dunning-kruger': ['is most certain precisely where their competence is thinnest',
     'cannot see the gap in its own knowledge from inside the gap',
     'mistakes a little fluency for real mastery'],
+  'unit-bias': ['anchors on unit price rather than market cap, treating low nominal coin prices as cheap',
+    'chases whole tokens under the illusion that lower nominal price means higher upside',
+    'measures value by token count rather than market capitalization'],
+  'airdrop-entitlement': ['expects retroactive token rewards for routine protocol usage and reacts with outrage when excluded',
+    'treats testnet participation as a binding contract for mainnet equity',
+    'measures protocol loyalty by historical gas spent rather than current utility'],
+  'diamond-hands-identity': ['wears holding through 90% drawdowns as a badge of honor, confusing stubbornness with conviction',
+    'refuses to take profits because holding has become core to their community identity',
+    'treats selling any portion of a position as a personal betrayal'],
+  'ath-anchoring': ['prices every token against its all-time high, viewing current levels as an automatic discount',
+    'refuses to exit positions until price returns to the previous cycle peak',
+    'treats past peak valuation as guaranteed future recovery'],
+  'rug-trauma-overcorrection': ['sees malicious intent and exploit risk in every standard smart contract update',
+    'exits winning positions at the first minor delay or quiet period from devs',
+    'treats every unannounced multisig transaction as an imminent exit scam'],
+  'gas-sunk-cost': ['refuses to abandon failing transactions or dead claims because of high gas fees already burned',
+    'doubles down on stagnant liquidity pools to justify the initial deployment gas',
+    'treats non-refundable network fees as active position cost basis'],
 };
 
 const INTENSITY = ['measured', 'steady', 'pronounced', 'intense', 'extreme'];
@@ -395,6 +413,12 @@ function biasAffinities(bf) {
     'bandwagon': 0.5 * hi(e) + 0.5 * hi(a),
     'authority-bias': 0.5 * hi(a) + 0.4 * lo(o),
     'dunning-kruger': 0.6 * lo(c) + 0.4 * hi(e) + 0.3 * lo(o),
+    'unit-bias': 0.5 * lo(o) + 0.4 * lo(c),
+    'airdrop-entitlement': 0.5 * hi(n) + 0.4 * lo(a),
+    'diamond-hands-identity': 0.6 * hi(n) + 0.4 * lo(o),
+    'ath-anchoring': 0.5 * lo(o) + 0.4 * hi(c),
+    'rug-trauma-overcorrection': 0.6 * hi(n) + 0.4 * lo(a),
+    'gas-sunk-cost': 0.5 * lo(c) + 0.4 * hi(n),
   };
 }
 

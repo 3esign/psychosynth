@@ -47,6 +47,17 @@ fi
 
 echo "-- git commit --"
 git add -A
+
+# Check staged changes for strict two-lane separation (src/** vs outputs/**, docs exempt)
+STAGED_FILES="$(git diff --cached --name-only)"
+TOUCHES_SRC="$(echo "$STAGED_FILES" | grep '^src/' || true)"
+TOUCHES_OUTPUTS="$(echo "$STAGED_FILES" | grep '^outputs/' || true)"
+if [ -n "$TOUCHES_SRC" ] && [ -n "$TOUCHES_OUTPUTS" ]; then
+  echo "ERROR: Change set touches both src/** and outputs/**." >&2
+  echo "Per AGENTS.md & docs/DATA_CONTRIBUTION.md, methodology changes (Lane 2) and data batches (Lane 1) MUST be committed as separate change sets." >&2
+  exit 1
+fi
+
 if git diff --cached --quiet; then
   echo "   nothing to commit."
 else

@@ -1,0 +1,18 @@
+-- 0022_crypto_native_biases.sql
+-- Fills the crypto-native cognitive biases to enrich the cognitive-bias-simulator
+-- product and widen the justified-bias palette for data generators.
+-- Idempotent and safe to re-run.
+
+INSERT INTO biases (slug, name, description, source, examples, mitigations) VALUES
+  ('unit-bias', 'Unit Bias', 'Evaluating value by token quantity rather than market capitalization', 'Geier et al. (2006)', '["A trader buys a sub-cent token assuming it is cheaper than a high-priced token with a lower market cap.","An agent over-allocates to low-nominal-price assets expecting whole-unit appreciation."]'::jsonb, '["Evaluate all assets strictly by total market capitalization and fully diluted valuation (FDV).","Denominate position metrics in total value rather than token count."]'::jsonb),
+  ('airdrop-entitlement', 'Airdrop Entitlement', 'Expecting retroactive equity rewards for routine protocol usage', 'Crypto-native market observation', '["A user completes routine transactions solely expecting an unannounced airdrop and reacts with outrage when omitted.","An agent spends disproportionate gas farming speculative rewards rather than trading value."]'::jsonb, '["Treat protocol usage as a service transaction, ignoring unpromised prospective rewards.","Cap gas spent on speculative farming to a strict percentage of projected expected value."]'::jsonb),
+  ('diamond-hands-identity', 'Diamond-Hands Identity Bias', 'Confusing stubborn holding through severe drawdowns with conviction', 'Meme-culture market observation', '["A trader refuses to take profit or cut loss because holding has become core to their community identity.","An agent ignores hard stop-loss triggers to avoid appearing weak to social signals."]'::jsonb, '["Separate community participation from execution logic; enforce non-negotiable exit triggers.","Re-evaluate holdings daily as if entering fresh positions from cash."]'::jsonb),
+  ('ath-anchoring', 'ATH Anchoring', 'Pricing assets against peak valuations rather than current fundamentals', 'Tversky & Kahneman (1974)', '["A trader refuses to sell a token down 90% from peak believing it must return to its all-time high.","An agent frames a dead asset as a 10x opportunity solely because of its past cycle top."]'::jsonb, '["Base forward projections on current liquidity and volume, disregarding historical peaks.","Recalibrate fair value models continuously using current cycle metrics."]'::jsonb),
+  ('rug-trauma-overcorrection', 'Rug-Trauma Overcorrection', 'Assuming exploit intent in standard updates after experiencing a loss', 'Post-exploit behavioral observation', '["A trader panic-sells a legitimate protocol position upon seeing a minor multisig key rotation.","An agent triggers emergency exits on temporary RPC delays, mistaking noise for an exploit."]'::jsonb, '["Differentiate routine governance and contract events from verified security alerts.","Require multi-source confirmation before executing emergency exit protocols."]'::jsonb),
+  ('gas-sunk-cost', 'Gas Sunk-Cost Fallacy', 'Refusing to exit dead positions due to non-refundable network fees paid', 'Arkes & Blumer (1985)', '["A trader maintains a dust position or dead LP because transaction fees to unwind exceed value.","An agent refuses to cancel an invalid order flow because of fees already burned."]'::jsonb, '["Treat network execution fees as sunk costs; evaluate exit decisions on net forward return.","Automate batch cleanups when gas prices fall below target thresholds."]'::jsonb)
+ON CONFLICT (slug) DO UPDATE SET
+  name        = EXCLUDED.name,
+  description  = EXCLUDED.description,
+  source       = EXCLUDED.source,
+  examples     = EXCLUDED.examples,
+  mitigations  = EXCLUDED.mitigations;

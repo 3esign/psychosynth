@@ -65,6 +65,8 @@ check "bias examples+mitigations" "$PSYCHOSYNTH_BASE_URL/api/v1/preview/cognitiv
 # Eval battery (GET is free: scenarios + rubric). Lenient shape check.
 check "eval/robinhood-stress-battery" "$PSYCHOSYNTH_BASE_URL/api/v1/eval/robinhood-stress-battery" \
   '(.scenarios? // .battery? // .title? // .rubric?) != null'
+check "eval/a2a-commerce-battery" "$PSYCHOSYNTH_BASE_URL/api/v1/eval/a2a-commerce-battery" \
+  '(.scenarios? // .battery? // .title? // .rubric?) != null'
 
 echo "----------------------------------------------------------------"
 if [ "$FAIL" = 0 ]; then

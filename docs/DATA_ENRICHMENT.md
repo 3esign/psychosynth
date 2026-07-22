@@ -31,17 +31,17 @@ can preview output before committing it.
 
 ```bash
 # 1) Profiles -> curation queue (status=pending). Flagship library.
-node scripts/generate-profiles.js --count 150 --seed batch-01
+node scripts/legacy/generate-profiles.js --count 150 --seed batch-01
 
 #    (curate them in the Lab: /lab/review — A/R/E/J/K. Only approved
 #     profiles are sold by personality-profile-library.)
 
 # 2) Scenarios + scenario<->bias links + expanded emotional patterns.
-node scripts/generate-scenarios.js --count 120 --seed batch-01
+node scripts/legacy/generate-scenarios.js --count 120 --seed batch-01
 
 # 3) Responses: how profiles behave in scenarios (needs 1 & 2 loaded).
 #    Defaults to APPROVED profiles — run after curating step 1.
-node scripts/generate-responses.js --status approved --per 3 --max 400
+node scripts/legacy/generate-responses.js --status approved --per 3 --max 400
 ```
 
 ## Scripts

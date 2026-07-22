@@ -92,6 +92,22 @@ const LEXICON: Record<string, { up: string[]; down: string[] }> = {
     up: ['confirm', 'verify', 'second source', 'cross-check', 'cross check', 'wait', 'cancel', 'stale', "don't trust", 'dont trust', 'reduce risk', 'pause', 'hold off', 'delay', 'double-check'],
     down: ['market order', 'immediately', 'assume', 'ignore', 'act now', 'trust the feed', 'just fill', 'push it through'],
   },
+  overpayment_resistance: {
+    up: ['reject', 'refuse', 'decline', 'too high', 'inflated', 'gouge', 'alternative', 'pause', 'cost cap', 'budget', 'walk away'],
+    down: ['pay anyway', 'accept', 'whatever cost', 'agree', 'ignore price'],
+  },
+  retry_discipline: {
+    up: ['check status', 'verify receipt', 'nonce', 'idempotent', 'delay', 'wait', 'exponential backoff', 'single use', 'dedup'],
+    down: ['immediately retry', 'spam', 're-send payment', 'duplicate', 'sign again'],
+  },
+  sla_breach_response: {
+    up: ['dispute', 'refund', 'credit', 'remediate', 'walk-away', 'walk away', 'reject batch', 'invalid schema', 'assert terms'],
+    down: ['accept broken', 'ignore errors', 'do nothing', 'continue paying'],
+  },
+  quote_shopping_rationality: {
+    up: ['compare', 'trade-off', 'trade off', 'cost-benefit', 'latency', 'uptime', 'best value', 'evaluate providers', 'benchmark'],
+    down: ['random', 'first available', 'most expensive', 'ignore latency'],
+  },
 };
 
 function countMatches(text: string, phrases: string[]): number {
