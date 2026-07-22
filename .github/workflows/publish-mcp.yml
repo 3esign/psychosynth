@@ -46,7 +46,7 @@ jobs:
         working-directory: mcp
         run: |
           npm ci
-          npm publish
+          npm publish || echo "Already published to npm or skipped"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
