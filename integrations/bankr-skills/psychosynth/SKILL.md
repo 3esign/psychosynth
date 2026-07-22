@@ -55,6 +55,12 @@ over x402 on Base.
   effect, loss aversion), by the 100- or 1,000-persona pack.
 - "Give me Solana meme-coin / degen trading psychology" → query
   `solana-trading-pack` (high-variance, risk-tolerant profiles).
+- "Stress-test service-commerce or quote-shopping agents" → query
+  `a2a-commerce-pack` (counterparty priors for agent service commerce).
+- "Simulate retail agent actions on token launch day" → query
+  `token-launch-pack` (early-stage sniper/bundler behaviors).
+- "Simulate social media bandwagon effects or copy-trading cascades" → query
+  `social-cascade-pack` (Farcaster cascades, social consensus).
 - "Stress-test my negotiation agent against hostile personalities" →
   profiles filtered on Dark Triad traits + their scenario responses.
 - "Which cognitive biases could wreck this decision loop?" → query
@@ -103,7 +109,10 @@ indicative.
 | `robinhood-counterparty-pack` | themed slice of the profile library: **US retail trader** personas (FOMO, disposition effect, loss aversion) with Big Five + prospect-theory posture — the counterparties a Robinhood agentic bot faces | $0.03 | 100 personas $2.50 (`?tier=pack-100`), 1,000 $19 (`?tier=pack-1k`) |
 | `solana-trading-pack` | themed slice: high-variance, risk-tolerant **Solana DeFi / meme-coin** trading psychology with modified prospect-theory coefficients | $0.05 | 100 $4 (`?tier=pack-100`), 500 $15 (`?tier=pack-500`) |
 | `behavioral-response-library` | a profile paired with its response to a high-stakes scenario: response text, reasoning chain, emotional arc, confidence, plus the scenario (category, title, description) and the responder's trait vector | $0.03 | 5,000 records $49 (`?tier=pack-5k`) |
-| `cognitive-bias-simulator` | one of 20 literature-sourced cognitive-bias models: description, academic source, worked examples, mitigations | $0.02 | — |
+| `cognitive-bias-simulator` | one of 83 literature-sourced cognitive-bias models: description, academic source, worked examples, mitigations | $0.02 | — |
+| `a2a-commerce-pack` | themed slice: **Agent-to-Agent service commerce** counterparties (negotiation, EIP-3009 quote-shopping, SLA disputes) | $0.05 | 100 personas $4.00 (`?tier=pack-100`), 1,000 $32 (`?tier=pack-1k`) |
+| `token-launch-pack` | themed slice: **token launch/bonding curve** traders (sniper/bundler behaviors, retail chasing) | $0.03 | 100 personas $2.50 (`?tier=pack-100`), 1,000 $19 (`?tier=pack-1k`) |
+| `social-cascade-pack` | themed slice: **social media sentiment & copy-trading** (Farcaster cascades, bandwagon effects) | $0.03 | 100 personas $2.50 (`?tier=pack-100`), 1,000 $19 (`?tier=pack-1k`) |
 
 The two themed packs are server-pinned to their theme (retail-trading / Solana
 tags), so they only ever serve on-theme personas even as the general library
@@ -173,6 +182,12 @@ grows.
   retail-trading personas server-side).
 - `solana-trading-pack`: `decision_style`, `mbti_label`, `big_five_min/max`,
   `lambda_min/max`, `limit` (theme pinned to `chain:solana` personas).
+- `a2a-commerce-pack`: `decision_style`, `mbti_label`, `big_five_min/max`,
+  `lambda_min/max`, `limit` (theme pinned to `a2a-commerce` personas).
+- `token-launch-pack`: `decision_style`, `mbti_label`, `big_five_min/max`,
+  `lambda_min/max`, `limit` (theme pinned to `launch-day` personas).
+- `social-cascade-pack`: `decision_style`, `mbti_label`, `big_five_min/max`,
+  `lambda_min/max`, `limit` (theme pinned to `social-cascade` personas).
 - `behavioral-response-library`: `category`, `scenario_slug` (csv),
   `profile_id`, `confidence_min`, `limit`.
 - `cognitive-bias-simulator`: `slug` (csv), `limit`.

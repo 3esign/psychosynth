@@ -37,10 +37,12 @@ banner "Preflight"
 run -tAc "SELECT 'profiles total:          '||count(*) FROM profiles"
 echo "batch-* polluted profiles: $(polluted)"
 
-banner "Migrations (idempotent): 0021 bias content, 0022 crypto-native biases, 0023 a2a battery"
+banner "Migrations (idempotent): 0021 bias content, 0025 bias taxonomy, 0022 crypto-native biases, 0023 a2a battery, 0024 productize segments"
 run -f supabase/migrations/0021_bias_examples_mitigations.sql
+run -f supabase/migrations/0025_bias_taxonomy.sql
 run -f supabase/migrations/0022_crypto_native_biases.sql
 run -f supabase/migrations/0023_a2a_commerce_battery.sql
+run -f supabase/migrations/0024_productize_new_segments.sql
 
 apply_batch() {
   banner "outputs/$1/APPLY_ALL.sql"

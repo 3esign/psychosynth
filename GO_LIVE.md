@@ -44,16 +44,20 @@ Gates run, commit, push → Vercel builds and deploys the production branch.
 
 ## Step 3 — Apply the database (once per release that changes it)
 
-```bash
-DATABASE_URL='postgresql://…' bash scripts/apply-data.sh   # applies EVERYTHING pending, in order, idempotently
+```powershell
+# Canonical path:
+$env:DATABASE_URL="postgresql://..." ; npx tsx scripts/apply-data.mjs
+
+# Unix alternative:
+DATABASE_URL='postgresql://…' bash scripts/apply-data.sh
 ```
 
-> The script covers migrations 0021–0023 plus all five `outputs/` batches
+> The scripts cover migrations 0021–0025 plus all five `outputs/` batches
 > (enrich-v4 → guarded 05_repair_v3 → doppler-a2a-v1 → a2a-commerce →
 > launch-day → social-cascades) and ends with count assertions.
 > Do NOT run `psql -f outputs/<batch>/APPLY_ALL.sql` from the repo root —
 > those files use `\i` (cwd-relative includes) and must run from inside
-> their own directory, which the script handles.
+> their own directory, which the scripts handle.
 
 > **Order matters — and this step is NOT optional.** As of 2026-07-22 the live
 > solana-trading-pack preview still serves `batch-solana-retry-*` tagged

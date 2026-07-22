@@ -47,7 +47,10 @@ async function run() {
     'robinhood-counterparty-pack',
     'solana-trading-pack',
     'behavioral-response-library',
-    'cognitive-bias-simulator'
+    'cognitive-bias-simulator',
+    'a2a-commerce-pack',
+    'token-launch-pack',
+    'social-cascade-pack'
   ];
 
   for (const slug of slugs) {
@@ -66,7 +69,10 @@ async function run() {
   const hygieneSlugs = [
     'personality-profile-library',
     'robinhood-counterparty-pack',
-    'solana-trading-pack'
+    'solana-trading-pack',
+    'a2a-commerce-pack',
+    'token-launch-pack',
+    'social-cascade-pack'
   ];
   for (const slug of hygieneSlugs) {
     await check(`tag-hygiene/${slug}`, `${prodUrl}/api/v1/preview/${slug}`, data => {
@@ -79,6 +85,52 @@ async function run() {
       }
       return true;
     });
+  }
+
+  // 5.1 Theme Purity
+  const themedPacks = [
+    { slug: 'robinhood-counterparty-pack', tag: 'retail-trading' },
+    { slug: 'solana-trading-pack', tag: 'chain:solana' },
+    { slug: 'a2a-commerce-pack', tag: 'a2a-commerce' },
+    { slug: 'token-launch-pack', tag: 'launch-day' },
+    { slug: 'social-cascade-pack', tag: 'social-cascade' }
+  ];
+  for (const pack of themedPacks) {
+    await check(`theme-purity/${pack.slug}`, `${prodUrl}/api/v1/preview/${pack.slug}`, data => {
+      const records = data.records || [];
+      if (records.length === 0) return false;
+      for (const r of records) {
+        const tags = r.tags || [];
+        const matches = tags.includes(pack.tag) || (pack.slug === 'robinhood-counterparty-pack' && tags.includes('robinhood'));
+        if (!matches) {
+          console.log(`Mismatch on ${pack.slug}: profile tags [${tags.join(', ')}] do not contain ${pack.tag}`);
+          return false;
+        }
+      }
+      return true;
+    });
+  }
+
+  // 5.2 Real 402 Quote check
+  try {
+    const res = await fetch(`${prodUrl}/api/v1/query/a2a-commerce-pack`);
+    if (res.status === 402) {
+      const data = await res.json();
+      const hasAccepts = Array.isArray(data.accepts) && data.accepts.length > 0;
+      const hasUSDC = data.accepts.some(a => a.asset && a.network === 'base');
+      if (hasAccepts && hasUSDC) {
+        console.log(`PASS  ${"x402 quote check (a2a-commerce-pack)".padEnd(42)} HTTP 402`);
+      } else {
+        console.log(`FAIL  ${"x402 quote check (a2a-commerce-pack)".padEnd(42)} HTTP 402 but accepts structure invalid`);
+        fail = true;
+      }
+    } else {
+      console.log(`FAIL  ${"x402 quote check (a2a-commerce-pack)".padEnd(42)} expected HTTP 402, got ${res.status}`);
+      fail = true;
+    }
+  } catch (e) {
+    console.log(`FAIL  ${"x402 quote check (a2a-commerce-pack)".padEnd(42)} Fetch error: ${e.message}`);
+    fail = true;
   }
 
   // 6. Shapes

@@ -87,8 +87,10 @@ async function main() {
 
   // 1. Migrations
   await runSqlFile('supabase/migrations/0021_bias_examples_mitigations.sql');
+  await runSqlFile('supabase/migrations/0025_bias_taxonomy.sql');
   await runSqlFile('supabase/migrations/0022_crypto_native_biases.sql');
   await runSqlFile('supabase/migrations/0023_a2a_commerce_battery.sql');
+  await runSqlFile('supabase/migrations/0024_productize_new_segments.sql');
 
   // 2. Batches
   const enrichV4Dir = path.resolve(rootDir, 'outputs/enrich-v4');

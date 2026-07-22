@@ -101,7 +101,10 @@ recipe's `allow_request_filters`.
 | `behavioral-response-library` | Profile-conditioned scenario responses | category, scenario_slug, profile_id, confidence_min, limit | `price_model` |
 | `cognitive-bias-simulator` | Cognitive-bias taxonomy | slug(s), limit | `price_model` |
 | `robinhood-counterparty-pack` | Retail-trader counterparties | (pinned `tags_include=[retail-trading]`) + trait filters | pack tiers |
-| `solana-trading-pack` | Solana-tagged trader personas | (pinned tags) + trait filters | pack tiers |
+| `solana-trading-pack` | Solana-tagged trader personas | (pinned `tags_include=[chain:solana]`) + trait filters | pack tiers |
+| `a2a-commerce-pack` | Agent-to-Agent Commerce counterparties | (pinned `tags_include=[a2a-commerce]`) + trait filters | pack tiers (premium) |
+| `token-launch-pack` | Token Launch Simulation counterparties | (pinned `tags_include=[launch-day]`) + trait filters | pack tiers |
+| `social-cascade-pack` | Social Cascade counterparties | (pinned `tags_include=[social-cascade]`) + trait filters | pack tiers |
 
 Because pricing and filtering already live in the recipe, a new product
 automatically becomes an ACP offering with no new code — same "new behavior =
