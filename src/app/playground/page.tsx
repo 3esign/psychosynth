@@ -24,8 +24,22 @@ const PREDEFINED_SCENARIOS = [
 
 export default function PlaygroundPage() {
   // Navigation Tab State
-  const [activeTab, setActiveTab] = useState<'lab' | 'passport' | 'arena' | 'x402'>('lab');
+  const [activeTab, setActiveTab] = useState<'lab' | 'passport' | 'arena' | 'x402' | 'guardian'>('lab');
   const [agentName, setAgentName] = useState('Synthetic Agent #8942');
+
+  // Uniswap Hook Simulation State
+  const [hookLog, setHookLog] = useState<string[]>([]);
+  const [hookSimResult, setHookSimResult] = useState<any>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab === 'guardian' || tab === 'lab' || tab === 'passport' || tab === 'arena' || tab === 'x402') {
+        setActiveTab(tab as any);
+      }
+    }
+  }, []);
 
   // Big Five State
   const [openness, setOpenness] = useState(0.8);
@@ -119,6 +133,35 @@ export default function PlaygroundPage() {
     }
   };
 
+  const addHookLogLine = (line: string, delay: number) => {
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        setHookLog((prev) => [...prev, line]);
+        resolve();
+      }, delay);
+    });
+  };
+
+  const handleRunHookSimulation = async () => {
+    setHookLog([]);
+    setHookSimResult(null);
+
+    const panicIdx = Math.round(neuroticism * 100);
+    const calculatedFeeBps = 30 + Math.round((panicIdx * (150 - 30)) / 100);
+    const calculatedFeePct = calculatedFeeBps / 100;
+
+    await addHookLogLine('🦄 Initiating swap transaction via Uniswap v4 PoolManager...', 200);
+    await addHookLogLine('🔍 Pool Configuration: Dynamic Fees enabled (DYNAMIC_FEE_FLAG)', 300);
+    await addHookLogLine(`🧬 Swapper behavioral prior signature attached: panic_index=${panicIdx}`, 400);
+    await addHookLogLine('🛡️ PoolManager routing callback to BehaviorAwareHook (beforeSwap)...', 300);
+    await addHookLogLine('🔑 Hook verifying Psychosynth ECDSA signature...', 400);
+    await addHookLogLine('✅ Signature verified against Psychosynth Trusted Signer!', 200);
+    await addHookLogLine(`📊 Dynamic Premium: base 30 bps + dynamic premium (${calculatedFeeBps - 30} bps)...`, 400);
+    await addHookLogLine(`🎉 Hook returning dynamic override: ${calculatedFeePct.toFixed(2)}% (${calculatedFeeBps} bps)`, 300);
+
+    setHookSimResult({ fee: calculatedFeePct, bps: calculatedFeeBps });
+  };
+
   return (
     <div className="min-h-screen bg-[#07090e] text-slate-100 font-sans antialiased relative overflow-hidden pb-16">
       
@@ -164,6 +207,12 @@ export default function PlaygroundPage() {
               className={`text-xs px-3.5 py-1.5 rounded-xl font-semibold transition ${activeTab === 'x402' ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
             >
               ⚡ x402 Inspector
+            </button>
+            <button
+              onClick={() => setActiveTab('guardian')}
+              className={`text-xs px-3.5 py-1.5 rounded-xl font-semibold transition ${activeTab === 'guardian' ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+            >
+              🛡️ Hook Simulator
             </button>
           </nav>
 
@@ -470,6 +519,143 @@ export default function PlaygroundPage() {
         {activeTab === 'x402' && (
           <div className="flex justify-center my-6">
             <HandshakeVisualizer />
+          </div>
+        )}
+
+        {/* TAB 5: ON-CHAIN HOOK SIMULATOR */}
+        {activeTab === 'guardian' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Left Column: Simulation Parameters */}
+            <section className="lg:col-span-5 bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-xl shadow-2xl flex flex-col gap-6">
+              <div>
+                <h2 className="text-base font-bold text-slate-100">Uniswap v4 Behavior Hook Parameters</h2>
+                <p className="text-xs text-slate-400 mt-0.5">Tune agent panic profile to simulate dynamic pool fees.</p>
+              </div>
+
+              {/* Presets */}
+              <div className="flex flex-col gap-2">
+                <span className="text-xs text-slate-400 font-semibold">Agent Profile Presets</span>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { name: 'Delta-Neutral MM', neuroticism: 0.20 },
+                    { name: 'Perp-Scalper', neuroticism: 0.40 },
+                    { name: '100x Leverage Degen', neuroticism: 0.95 }
+                  ].map((preset) => (
+                    <button
+                      key={preset.name}
+                      onClick={() => setNeuroticism(preset.neuroticism)}
+                      className="text-[11px] px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-750 border border-slate-700/60 text-slate-300 hover:text-white transition"
+                    >
+                      {preset.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Slider */}
+              <div className="space-y-3 pt-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-300 font-medium">Agent Neuroticism (Panic Base)</span>
+                  <span className="font-mono text-pink-450">{(neuroticism * 100).toFixed(0)} / 100</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={neuroticism}
+                  onChange={(e) => setNeuroticism(parseFloat(e.target.value))}
+                  className="w-full accent-pink-500 h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer"
+                />
+                <p className="text-[10px] text-slate-500 leading-relaxed font-sans font-medium">
+                  The Uniswap hook reads the signed panic index, which is derived from the agent's Neuroticism and Prospect Theory loss-aversion (\(\lambda\)).
+                </p>
+              </div>
+
+              {/* Hook Configuration */}
+              <div className="space-y-4 pt-4 border-t border-slate-800">
+                <span className="text-xs text-slate-400 font-semibold">v4 Pool Config</span>
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-900">
+                    <span className="text-slate-500 block text-[10px] uppercase font-mono">Base LP Fee</span>
+                    <span className="text-slate-200 font-bold font-mono">0.30% (3000 bps)</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-900">
+                    <span className="text-slate-500 block text-[10px] uppercase font-mono">Max Dynamic Fee</span>
+                    <span className="text-pink-400 font-bold font-mono">1.50% (15000 bps)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Simulation Trigger */}
+              <button
+                onClick={handleRunHookSimulation}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 hover:from-pink-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-pink-500/20 active:scale-95 transition"
+              >
+                Execute Swap &amp; Verify Hook Fee
+              </button>
+            </section>
+
+            {/* Right Column: Execution Log & Visual Output */}
+            <section className="lg:col-span-7 flex flex-col gap-6">
+              {/* Dynamic Fee Visualizer Card */}
+              <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 backdrop-blur-xl shadow-2xl flex flex-col items-center justify-center text-center py-10 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500" />
+                
+                <span className="text-[10px] uppercase font-mono text-slate-500 tracking-wider font-semibold">Active Pool Swap Fee</span>
+                
+                {/* Dynamically sizing fee indicator */}
+                <div className="text-5xl font-black font-mono text-white tracking-tight mt-4 mb-2 flex items-baseline">
+                  {hookSimResult ? (
+                    <>
+                      <span className="bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+                        {hookSimResult.fee.toFixed(2)}%
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-slate-500">0.30%</span>
+                  )}
+                </div>
+                
+                {hookSimResult && (
+                  <span className="text-xs text-slate-400 font-mono">
+                    ({hookSimResult.bps} bps — Dynamic Premium Applied)
+                  </span>
+                )}
+
+                <div className="w-full max-w-sm bg-slate-950 rounded-full h-2.5 mt-6 overflow-hidden border border-slate-900">
+                  <div
+                    className="bg-gradient-to-r from-pink-500 to-purple-500 h-2.5 transition-all duration-500"
+                    style={{ width: `${((hookSimResult?.fee ?? 0.3) / 1.5) * 100}%` }}
+                  />
+                </div>
+                
+                <div className="flex justify-between w-full max-w-sm text-[10px] text-slate-600 font-mono mt-1.5">
+                  <span>0.30% Base</span>
+                  <span>1.50% Max Cap</span>
+                </div>
+              </div>
+
+              {/* Execution Logs */}
+              <div className="bg-slate-950 border border-slate-900 rounded-3xl p-5 font-mono text-xs flex flex-col gap-2 h-56 overflow-y-auto shadow-inner">
+                <div className="flex justify-between items-center text-[10px] text-slate-500 uppercase tracking-widest border-b border-slate-800/80 pb-2 mb-1">
+                  <span>Uniswap v4 Hook Execution Logger</span>
+                  <span className="h-2 w-2 rounded-full bg-pink-500 animate-pulse" />
+                </div>
+                {hookLog.length === 0 ? (
+                  <span className="text-slate-600">Waiting to execute swap transaction...</span>
+                ) : (
+                  hookLog.map((line, idx) => (
+                    <div
+                      key={idx}
+                      className={`${line.startsWith('✅') || line.startsWith('🎉') ? 'text-emerald-400' : line.startsWith('❌') ? 'text-rose-450' : line.startsWith('🔑') || line.startsWith('🛡️') ? 'text-pink-450' : 'text-slate-350'}`}
+                    >
+                      {line}
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
           </div>
         )}
 

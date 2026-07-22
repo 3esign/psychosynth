@@ -153,6 +153,57 @@ export default async function LandingPage() {
           </div>
         </section>
 
+        {/* On-Chain Guardian Rails Feature Section */}
+        <section className="p-8 rounded-2xl border border-pink-500/20 bg-gradient-to-br from-pink-500/5 via-slate-900/60 to-purple-500/5 space-y-6 shadow-2xl backdrop-blur-md">
+          <div className="flex flex-col md:flex-row items-start justify-between gap-6">
+            <div className="space-y-2 max-w-2xl">
+              <span className="text-[10px] bg-pink-500/10 text-pink-300 px-2.5 py-1 rounded-full border border-pink-500/30 font-mono font-bold uppercase tracking-wider">
+                New Integration: Smart Contract Guard Rails
+              </span>
+              <h2 className="text-3xl font-extrabold tracking-tight text-white">On-Chain Behavioral Firewalls</h2>
+              <p className="text-sm text-slate-350 leading-relaxed font-sans">
+                Protect protocol liquidity and secure autonomous agent transactions directly on-chain. Psychosynth integrates with execution environments to verify behavioral metrics before transaction confirmation.
+              </p>
+            </div>
+            <Link 
+              href="/playground?tab=guardian" 
+              className="shrink-0 inline-flex items-center justify-center px-5 py-3 bg-slate-950 hover:bg-slate-900 text-pink-300 hover:text-white rounded-xl border border-pink-500/30 hover:border-pink-500/60 font-bold transition-all text-xs font-mono"
+            >
+              Simulate dynamic hook &rarr;
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 font-mono text-xs">
+            <div className="p-5 rounded-xl bg-slate-950/80 border border-slate-800/60 space-y-3">
+              <div className="flex items-center gap-2 text-indigo-400">
+                <span className="text-base">🛡️</span>
+                <span className="font-bold">ERC-7579 Behavioral Guard Module</span>
+              </div>
+              <p className="text-slate-400 font-sans text-xs leading-relaxed">
+                Intercepts high-risk smart account transactions. Checks signed Psychosynth certifications on-chain to block execution if the agent's volatility panic index is currently triggered.
+              </p>
+              <pre className="p-3 bg-slate-900/50 rounded border border-slate-800/80 text-[10px] text-slate-300 overflow-x-auto leading-relaxed">
+{`// Guard blocks txn if panic exceeds limit
+require(panicIndex <= maxPanicLimit, "Agent Panic Exceeded");`}
+              </pre>
+            </div>
+            <div className="p-5 rounded-xl bg-slate-950/80 border border-slate-800/60 space-y-3">
+              <div className="flex items-center gap-2 text-pink-400">
+                <span className="text-base">🦄</span>
+                <span className="font-bold">Uniswap v4 Behavior-Aware Hook</span>
+              </div>
+              <p className="text-slate-400 font-sans text-xs leading-relaxed">
+                LPs suffer from toxic flow during market stress. The hook adjusts swap fee spreads based on the swapper's signed Psychosynth panic index, neutralizing high-volatility trading stress.
+              </p>
+              <pre className="p-3 bg-slate-900/50 rounded border border-slate-800/80 text-[10px] text-slate-300 overflow-x-auto leading-relaxed">
+{`// Adjusts swap fee dynamically in v4 pool
+uint24 feeWithFlag = dynamicFee | OVERRIDE_FEE_FLAG;
+return (beforeSwap.selector, ZERO_DELTA, feeWithFlag);`}
+              </pre>
+            </div>
+          </div>
+        </section>
+
         {/* Live Products Grid */}
         <section className="space-y-6">
           <div className="space-y-1.5">
