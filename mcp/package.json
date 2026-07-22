@@ -1,6 +1,6 @@
 {
   "name": "psychosynth-mcp",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "mcpName": "io.github.3esign/psychosynth",
   "description": "MCP server for the Psychosynth synthetic psychometric data marketplace — discover the catalog, fetch free deterministic previews, get x402 price quotes, and run paid queries with your own wallet.",
   "type": "module",

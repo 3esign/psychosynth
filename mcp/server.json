@@ -1,17 +1,17 @@
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.3esign/psychosynth",
-  "description": "Discover and query Psychosynth synthetic psychometric data (Big Five profiles, cognitive biases, profile-conditioned behavioral responses) over the x402 protocol. Free catalog, free deterministic previews, and price quotes; paid queries settle in USDC on Base using your own wallet.",
+  "description": "Psychometric data marketplace: Big Five profiles, cognitive biases & behavioral data via x402.",
   "repository": {
     "url": "https://github.com/3esign/psychosynth.git",
     "source": "github"
   },
-  "version": "0.1.2",
+  "version": "0.1.3",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "psychosynth-mcp",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "transport": {
         "type": "stdio"
       },
