@@ -91,6 +91,7 @@ async function main() {
   await runSqlFile('supabase/migrations/0022_crypto_native_biases.sql');
   await runSqlFile('supabase/migrations/0023_a2a_commerce_battery.sql');
   await runSqlFile('supabase/migrations/0024_productize_new_segments.sql');
+  await runSqlFile('supabase/migrations/0026_perp_psychology_pack.sql');
 
   // 2. Batches
   const enrichV4Dir = path.resolve(rootDir, 'outputs/enrich-v4');
@@ -108,6 +109,10 @@ async function main() {
 
   const socialCascadesDir = path.resolve(rootDir, 'outputs/enrich-social-cascades');
   await runSqlFile('outputs/enrich-social-cascades/APPLY_ALL.sql', socialCascadesDir);
+
+  const perpDir = path.resolve(rootDir, 'outputs/perp-v1');
+  await runSqlFile('outputs/perp-v1/APPLY_ALL.sql', perpDir);
+  await runSqlFile('outputs/perp-v1/05_repair_v3.sql', perpDir);
 
   console.log('\n=== Post-apply Verification ===');
   const leftPolluted = await query("SELECT count(*) FROM profiles WHERE EXISTS (SELECT 1 FROM unnest(tags) t WHERE t LIKE 'batch-%');");
