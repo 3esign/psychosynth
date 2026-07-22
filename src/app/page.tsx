@@ -74,16 +74,22 @@ export default async function LandingPage() {
 
           <div className="flex flex-wrap gap-4 pt-3">
             <Link
-              href="/explore"
-              className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl font-semibold transition-all shadow-lg shadow-indigo-500/20 border border-indigo-400/30"
+              href="/playground"
+              className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-indigo-500/25 border border-indigo-400/30"
             >
-              Explore Data Browser &rarr;
+              🧠 Interactive Playground &rarr;
+            </Link>
+            <Link
+              href="/explore"
+              className="inline-flex items-center justify-center px-5 py-3 bg-slate-900 hover:bg-slate-850 text-slate-200 hover:text-white rounded-xl border border-slate-800 font-semibold transition-all hover:border-slate-700 shadow-md"
+            >
+              Explore Data Browser
             </Link>
             <Link
               href="/agent"
               className="inline-flex items-center justify-center px-5 py-3 bg-slate-900 hover:bg-slate-850 text-slate-200 hover:text-white rounded-xl border border-slate-800 font-semibold transition-all hover:border-slate-700 shadow-md"
             >
-              &#9654; Live Agent Demo
+              📈 Market Simulator
             </Link>
             <a
               href="/docs"
