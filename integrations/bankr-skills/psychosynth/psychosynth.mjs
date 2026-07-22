@@ -7,14 +7,17 @@
  * portable alternative to the bash + jq workflow scripts, for runtimes where a
  * `jq` binary isn't available or a bundled `jq` shim is broken.
  *
- * Usage:
- *   node psychosynth.mjs discovery
- *   node psychosynth.mjs preview <slug>
- *   node psychosynth.mjs query <slug> [querystring]      # set X_PAYMENT for paid
- *   node psychosynth.mjs doppler                          # retail resistance sim
- *   node psychosynth.mjs guardrails ["trade setup"]       # cognitive-bias screen
- *   node psychosynth.mjs negotiation [category]           # counterparty reactions
- *   node psychosynth.mjs personalize                      # UX config per persona
+ * Usage (always invoke by a path that is valid from YOUR cwd — in agent
+ * sandboxes the working directory is usually NOT the skill folder, so prefer
+ * an absolute path, e.g. /tmp/psychosynth.mjs after fetching the canonical
+ * copy from $PSYCHOSYNTH_BASE_URL/psychosynth.mjs):
+ *   node /path/to/psychosynth.mjs discovery
+ *   node /path/to/psychosynth.mjs preview <slug>
+ *   node /path/to/psychosynth.mjs query <slug> [querystring]  # set X_PAYMENT for paid
+ *   node /path/to/psychosynth.mjs doppler                 # retail resistance sim
+ *   node /path/to/psychosynth.mjs guardrails ["trade setup"]  # cognitive-bias screen
+ *   node /path/to/psychosynth.mjs negotiation [category]  # counterparty reactions
+ *   node /path/to/psychosynth.mjs personalize             # UX config per persona
  *
  * Env: PSYCHOSYNTH_BASE_URL (default https://psychosynth.vercel.app),
  *      X_PAYMENT (base64 x402 header — enables paid mode where relevant).
@@ -218,7 +221,7 @@ async function main() {
   const [cmd, ...args] = process.argv.slice(2);
   const fn = COMMANDS[cmd];
   if (!fn) {
-    console.error('usage: node psychosynth.mjs <discovery|preview|query|doppler|guardrails|negotiation|personalize> [args]');
+    console.error('usage: node /path/to/psychosynth.mjs <discovery|preview|query|doppler|guardrails|negotiation|personalize> [args]');
     process.exit(2);
   }
   try {

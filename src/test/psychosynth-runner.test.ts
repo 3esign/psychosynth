@@ -22,8 +22,8 @@ const PUBLIC_COPY = join(ROOT, 'public', 'psychosynth.mjs');
 const SKILL_COPY = join(ROOT, 'integrations', 'bankr-skills', 'psychosynth', 'psychosynth.mjs');
 
 // Dynamic import of the shipped module itself (not a rebuilt approximation).
-// @ts-expect-error — plain .mjs module without type declarations
-const runner = await import(/* @vite-ignore */ PUBLIC_COPY);
+// Non-literal specifier → typed as any; the .mjs ships no declarations.
+const runner: any = await import(/* @vite-ignore */ PUBLIC_COPY);
 
 describe('runner copy sync', () => {
   it('public/ and bankr-skill copies are byte-identical', () => {
@@ -157,5 +157,19 @@ describe('shipped source invariants', () => {
 
   it('never auto-retries requests carrying a payment header', () => {
     expect(src).toMatch(/sendsPayment \? 1 :/);
+  });
+});
+
+describe('SKILL.md instruction safety', () => {
+  // Field failure (Bankr verifier, 2026-07-22): agents copy commands out of
+  // SKILL.md code blocks and run them from an arbitrary sandbox cwd. A bare
+  // `node psychosynth.mjs ...` fails there with "Cannot find module". Every
+  // runnable example must use an absolute path, an explicit ./ relative from
+  // the documented skill dir, or a self-locating bash script.
+  it('code blocks never invoke the runner as a bare relative command', () => {
+    const md = readFileSync(join(ROOT, 'integrations', 'bankr-skills', 'psychosynth', 'SKILL.md'), 'utf8');
+    const fenced = [...md.matchAll(/```[a-z]*\n([\s\S]*?)```/g)].map((m) => m[1]).join('\n');
+    const bare = fenced.split('\n').filter((l) => /^\s*node\s+psychosynth\.mjs\b/.test(l));
+    expect(bare, `cwd-fragile commands in SKILL.md code blocks:\n${bare.join('\n')}`).toEqual([]);
   });
 });

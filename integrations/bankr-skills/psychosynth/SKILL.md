@@ -243,27 +243,39 @@ The bash scripts above need the `jq` and `curl` CLIs. If your runtime lacks a
 `jq` binary — or ships a broken `jq` shim (e.g. a bun-installed `jq` npm package
 that errors with "Cannot find package 'commander'") — use the **Node
 entrypoint** instead. It uses only Node's built-in `fetch` (Node ≥18 or bun) —
-no jq, no curl, no npm install:
+no jq, no curl, no npm install.
+
+**Do NOT run `node psychosynth.mjs` as a bare relative command** — in most
+agent sandboxes your working directory is NOT the skill folder, and node will
+fail with `Cannot find module 'psychosynth.mjs'`. Always resolve the runner to
+a known absolute path first. This works from ANY directory, whether or not the
+file shipped with your installed copy of the skill (the canonical copy is
+always served by the API itself, advertised as `endpoints.runner` in
+`/api/v1/discovery`):
 
 ```bash
-node psychosynth.mjs discovery
-node psychosynth.mjs preview robinhood-counterparty-pack
-node psychosynth.mjs query personality-profile-library "big_five_min=neuroticism:0.7&limit=20"   # set X_PAYMENT for the paid call
-node psychosynth.mjs doppler                 # retail counterparty resistance sim
-node psychosynth.mjs guardrails "long 5x into resistance"
-node psychosynth.mjs negotiation negotiation # optional category filter
-node psychosynth.mjs personalize
+# 1) Fetch the canonical runner once (sandbox-safe, no cwd assumptions):
+curl -fsSL -o /tmp/psychosynth.mjs "${PSYCHOSYNTH_BASE_URL:-https://psychosynth.vercel.app}/psychosynth.mjs"
+
+# ...or without curl, using only node:
+node -e "const u=(process.env.PSYCHOSYNTH_BASE_URL||'https://psychosynth.vercel.app')+'/psychosynth.mjs';fetch(u).then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}).then(t=>require('node:fs').writeFileSync('/tmp/psychosynth.mjs',t))"
+
+# 2) Run it by absolute path:
+node /tmp/psychosynth.mjs discovery
+node /tmp/psychosynth.mjs preview robinhood-counterparty-pack
+node /tmp/psychosynth.mjs query personality-profile-library "big_five_min=neuroticism:0.7&limit=20"   # set X_PAYMENT for the paid call
+node /tmp/psychosynth.mjs doppler                 # retail counterparty resistance sim
+node /tmp/psychosynth.mjs guardrails "long 5x into resistance"
+node /tmp/psychosynth.mjs negotiation negotiation # optional category filter
+node /tmp/psychosynth.mjs personalize
 ```
+
+(If you know you are already inside the installed skill directory — the folder
+containing this SKILL.md — `node ./psychosynth.mjs discovery` works too.)
 
 Same behavior as the bash workflows (free preview by default; set `X_PAYMENT`
 for the paid path where noted). This is the recommended entrypoint for the Bankr
-runtime and any sandbox where the `jq` binary isn't guaranteed.
-
-If `psychosynth.mjs` is not present in your installed copy of this skill,
-fetch the canonical copy served by the API itself (also advertised as
-`endpoints.runner` in `/api/v1/discovery`):
-
-```bash
-curl -fsSL -o psychosynth.mjs "$PSYCHOSYNTH_BASE_URL/psychosynth.mjs"
-node psychosynth.mjs discovery
-```
+runtime and any sandbox where the `jq` binary isn't guaranteed. The bash
+scripts never have this problem: they locate the runner relative to their own
+file, so invoke them by path (e.g. `bash <skill-dir>/scripts/discovery.sh`)
+from wherever you are.
