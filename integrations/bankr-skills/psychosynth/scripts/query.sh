@@ -10,9 +10,9 @@ set -euo pipefail
 # 'jq' shim that errors on 'commander'), run the zero-dependency Node version:
 #   node psychosynth.mjs <command>
 command -v curl >/dev/null 2>&1 || { echo "psychosynth: 'curl' CLI not found (apt-get install -y curl | apk add curl | brew install curl)." >&2; exit 127; }
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if ! command -v jq >/dev/null 2>&1 || ! printf '{}' | jq -e . >/dev/null 2>&1; then
-  echo "psychosynth: a working 'jq' CLI is required, but it is missing or broken (a bun/npm 'jq' shim will not work). Install real jq (apt-get install -y jq | apk add jq | brew install jq), OR use the zero-dependency Node runner: node psychosynth.mjs <command>" >&2
-  exit 127
+  exec node "$SCRIPT_DIR/../psychosynth.mjs" query "$@"
 fi
 SLUG="${1:?usage: query.sh <product-slug> [query-string]}"
 QS="${2:-}"
