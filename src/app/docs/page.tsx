@@ -82,6 +82,65 @@ const { records } = await res.json();`}
         </section>
 
         <section className="space-y-4">
+          <h2 className="text-2xl font-semibold text-white border-b border-slate-800 pb-3">Virtuals Protocol &amp; G.A.M.E. SDK</h2>
+          <p className="text-slate-400 leading-relaxed">
+            Autonomous agents in the Virtuals Protocol ecosystem running the <strong>G.A.M.E. Framework</strong> can integrate Psychosynth natively as a custom action tool. This requires zero setup or agent registration on your end. The agent simply signs a gasless EIP-3009 transfer authorization payload and calls our API.
+          </p>
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-white">1. G.A.M.E. Custom Action JSON Definition</h3>
+            <pre className="p-4 bg-slate-900 rounded-xl border border-slate-800 text-sm text-slate-300 overflow-x-auto">
+{`{
+  "name": "query_psychosynth_data",
+  "description": "Queries detailed synthetic psychometric profiles or behavioral responses. Settles dynamically in USDC on Base.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "slug": {
+        "type": "string",
+        "description": "Product slug, e.g. 'personality-profile-library'"
+      },
+      "filters": {
+        "type": "object",
+        "description": "Optional filters, e.g. { \\"decision_style\\": \\"analytical\\" }"
+      }
+    },
+    "required": ["slug"]
+  }
+}`}
+            </pre>
+            <h3 className="text-lg font-semibold text-white">2. G.A.M.E. Custom Tool Execution</h3>
+            <p className="text-slate-400 leading-relaxed">
+              When the agent triggers this action, it generates and signs an EVM <code className="text-indigo-400">TransferWithAuthorization</code> payload (EIP-3009) using its on-chain wallet. The agent then performs a POST/GET request to our endpoint:
+            </p>
+            <pre className="p-4 bg-slate-900 rounded-xl border border-slate-800 text-sm text-slate-300 overflow-x-auto">
+{`// Example of the final HTTP call your Virtuals custom function makes:
+const res = await fetch('https://psychosynth.vercel.app/api/v1/query/' + slug, {
+  method: 'GET',
+  headers: {
+    'X-PAYMENT': btoa(JSON.stringify({
+      x402Version: 1,
+      scheme: 'exact',
+      network: 'base',
+      payload: {
+        signature: eip3009Signature,
+        authorization: {
+          from: agentWalletAddress,
+          to: payToAddress, // From 402 Quote
+          value: amountBaseUnits, // From 402 Quote
+          validAfter: 0,
+          validBefore: expiryTimestamp,
+          nonce: random32BytesHex
+        }
+      }
+    }))
+  }
+});
+const { records } = await res.json();`}
+            </pre>
+          </div>
+        </section>
+
+        <section className="space-y-4">
           <h2 className="text-2xl font-semibold text-white border-b border-slate-800 pb-3">Products &amp; filters</h2>
           {(products ?? []).map((p: any) => {
             const rules = Array.isArray(p.recipes) ? p.recipes[0]?.query_rules : p.recipes?.query_rules;

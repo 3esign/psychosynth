@@ -39,7 +39,7 @@ Transactions settle query-by-query on the Base blockchain using the x402 standar
 
 ### 3. Model Context Protocol (MCP) Server
 Psychosynth exposes an MCP server to connect directly with autonomous agent runtimes.
-- **Supported Frameworks**: ElizaOS, OpenClaw (via MCPorter), and Nous Research's Hermes Agent.
+- **Supported Frameworks**: ElizaOS, OpenClaw (via MCPorter), Nous Research's Hermes Agent, and Virtuals Protocol (via G.A.M.E. SDK custom actions).
 - **Exposed Tools**:
   - `list_products`: Discover available products, schemas, and pricing.
   - `preview_records`: Fetch free, deterministic samples to verify schema shape.
@@ -129,10 +129,19 @@ Full architectural specifications, master plans, and developer logs reside in th
 
 ---
 
-## Bankr Ecosystem Integration
+## Ecosystem & Platform Integrations
+
+### 1. Bankr Ecosystem (x402 Native)
 
 Psychosynth speaks **standard x402**: agents sign a gasless USDC EIP-3009 `TransferWithAuthorization` on Base and the server settles it via an x402 facilitator (the facilitator broadcasts and pays gas). This is the payment shape Bankr platform wallets, `x402-fetch`, and most agent wallet layers produce automatically. Self-settled `txHash` payments (Base or Solana) remain supported as a fallback.
 
 - **Free agent preflight**: `GET /api/v1/discovery` — products, live prices, tiers, payTo, and settlement methods in one call.
 - **Bankr skill**: the submission package for the [BankrBot/skills](https://github.com/BankrBot/skills) catalog lives in [`integrations/bankr-skills/psychosynth/`](integrations/bankr-skills/psychosynth/) (SKILL.md + catalog.json + logo + references + scripts). Once merged it surfaces on [skills.bankr.bot](https://skills.bankr.bot) and installs with: `install the psychosynth skill from https://github.com/BankrBot/skills/tree/main/psychosynth`.
 - **Positioning**: existing intelligence skills in that ecosystem analyze tokens; Psychosynth sells synthetic *behavioral* data — priors about how market participants act — for trading sims, counterparty modeling, and agent stress-testing.
+
+### 2. Virtuals Protocol (G.A.M.E. SDK Custom Actions)
+
+Virtuals Protocol agents running the **G.A.M.E. Framework** can query Psychosynth natively without registering a profile or hosting additional worker processes.
+- **Action Schema**: Map our query endpoints to a G.A.M.E. custom action. The agent determines which data it needs based on its operational loop.
+- **Dynamic Payment**: The agent constructs and signs a gasless EVM `TransferWithAuthorization` payload (EIP-3009) to pay for the query.
+- **Seamless HTTP resolution**: The agent's tool execution script POSTs/GETs the payload directly to our Vercel API endpoint. We verify and settle the transaction, returning the records in the same response block. See [API Documentation](/docs) for schema payloads and code templates.
