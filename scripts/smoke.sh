@@ -9,8 +9,12 @@
 set -uo pipefail   # NOT -e: run every check even if one fails
 : "${PSYCHOSYNTH_BASE_URL:=https://psychosynth.vercel.app}"
 
-# Requires the curl and jq CLIs (NOT the node-jq npm package).
-for _b in curl jq; do command -v "$_b" >/dev/null 2>&1 || { echo "psychosynth: '$_b' CLI not found. Install it (Debian/Ubuntu: apt-get install -y $_b | Alpine: apk add $_b | macOS: brew install $_b). These scripts call the curl/jq CLIs directly — node-jq is not used." >&2; exit 127; }; done
+# Requires curl + a WORKING jq CLI (a bun/npm 'jq' shim will not work).
+command -v curl >/dev/null 2>&1 || { echo "smoke: 'curl' CLI not found (apt-get install -y curl | apk add curl | brew install curl)." >&2; exit 127; }
+if ! command -v jq >/dev/null 2>&1 || ! printf '{}' | jq -e . >/dev/null 2>&1; then
+  echo "smoke: a working 'jq' CLI is required (install: apt-get install -y jq | apk add jq | brew install jq)." >&2
+  exit 127
+fi
 
 FAIL=0
 CODE=000

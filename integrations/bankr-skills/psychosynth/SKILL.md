@@ -236,3 +236,25 @@ neuroticism proxy on the free path and use the real λ when `X_PAYMENT` is set.
 - `workflows/check-trading-guardrails.sh "[trade-setup]"` — Screen a trade setup against the 20 cognitive-bias models (name, description, worked example, mitigation).
 - `workflows/x402-negotiation-sim.sh [category]` — Counterparty reactions + reasoning from `behavioral-response-library`; optional category filter (trading|negotiation|social|crisis).
 - `workflows/personalize-app.sh` — Per-user UX config tiered by risk posture. Free: neuroticism proxy; `X_PAYMENT`: real prospect-theory λ.
+
+## Zero-dependency runner (no jq / curl needed)
+
+The bash scripts above need the `jq` and `curl` CLIs. If your runtime lacks a
+`jq` binary — or ships a broken `jq` shim (e.g. a bun-installed `jq` npm package
+that errors with "Cannot find package 'commander'") — use the **Node
+entrypoint** instead. It uses only Node's built-in `fetch` (Node ≥18 or bun) —
+no jq, no curl, no npm install:
+
+```bash
+node psychosynth.mjs discovery
+node psychosynth.mjs preview robinhood-counterparty-pack
+node psychosynth.mjs query personality-profile-library "big_five_min=neuroticism:0.7&limit=20"   # set X_PAYMENT for the paid call
+node psychosynth.mjs doppler                 # retail counterparty resistance sim
+node psychosynth.mjs guardrails "long 5x into resistance"
+node psychosynth.mjs negotiation negotiation # optional category filter
+node psychosynth.mjs personalize
+```
+
+Same behavior as the bash workflows (free preview by default; set `X_PAYMENT`
+for the paid path where noted). This is the recommended entrypoint for the Bankr
+runtime and any sandbox where the `jq` binary isn't guaranteed.
