@@ -30,7 +30,7 @@ export default async function LandingPage() {
     { name: 'ElizaOS', tag: 'Available', badge: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300', blurb: 'Connect through @elizaos/plugin-mcp in your agent character config.', href: '/docs', external: false, cta: 'Setup' },
     { name: 'OpenClaw', tag: 'Available', badge: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300', blurb: 'Add via MCPorter: openclaw mcp add psychosynth.', href: '/docs', external: false, cta: 'Setup' },
     { name: 'Hermes', tag: 'Available', badge: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300', blurb: 'Nous Research agents register the server over stdio in their config.', href: '/docs', external: false, cta: 'Setup' },
-    { name: 'Virtuals · ACP', tag: 'Planned', badge: 'bg-slate-600/20 border-slate-600/30 text-slate-400', blurb: 'Provider integration for the Virtuals agent economy (escrowed USDC on Base).', href: '/docs', external: false, cta: 'Roadmap' },
+    { name: 'Virtuals (G.A.M.E.)', tag: 'Live', badge: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300', blurb: 'Virtuals G.A.M.E. SDK agents call Psychosynth dynamically as a custom tool.', href: '/docs', external: false, cta: 'Setup' },
   ];
 
   return (
