@@ -39,9 +39,7 @@ metadata:
 Standard LLM agents suffer average-model bias: every simulated
 counterparty is polite, risk-neutral, and identical. Psychosynth sells
 the opposite — structured, high-variance psychometric records that make
-simulated populations behave like real ones. Five products plus a
-behavioral eval battery, one free preview each, per-query USDC settlement
-over x402 on Base.
+simulated populations behave like real ones. Eight products plus two behavioral eval batteries, one free preview each, per-query USDC settlement over x402 on Base.
 
 ## When to invoke
 
@@ -114,9 +112,7 @@ indicative.
 | `token-launch-pack` | themed slice: **token launch/bonding curve** traders (sniper/bundler behaviors, retail chasing) | $0.03 | 100 personas $2.50 (`?tier=pack-100`), 1,000 $19 (`?tier=pack-1k`) |
 | `social-cascade-pack` | themed slice: **social media sentiment & copy-trading** (Farcaster cascades, bandwagon effects) | $0.03 | 100 personas $2.50 (`?tier=pack-100`), 1,000 $19 (`?tier=pack-1k`) |
 
-The two themed packs are server-pinned to their theme (retail-trading / Solana
-tags), so they only ever serve on-theme personas even as the general library
-grows.
+The five themed packs are server-pinned to their theme (retail-trading / chain:solana / a2a-commerce / launch-day / social-cascade tags), so they only ever serve on-theme personas even as the general library grows.
 
 ## Evaluation battery — `GET|POST /api/v1/eval/{battery}`
 
