@@ -23,6 +23,8 @@ interface RadarChartProps {
   };
   prospectTheory: {
     lambda: number; // normalized 0.5-5.0 -> 0-1
+    alpha?: number;
+    beta?: number;
   };
   size?: number;
 }
