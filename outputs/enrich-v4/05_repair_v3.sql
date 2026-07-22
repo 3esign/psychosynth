@@ -6,6 +6,26 @@
 -- (0015/0017) and this v4 batch have no such tag and are untouched.
 BEGIN;
 
+-- SAFETY PRECHECK (added 2026-07-22): the live solana-trading-pack still
+-- serves batch-solana-retry-* personas. This file deletes EVERY batch-*
+-- tagged profile, so running it BEFORE outputs/enrich-v4/APPLY_ALL.sql would
+-- empty that pack's preview and paid query on production. Abort unless the
+-- clean v4 replacements (871 chain:solana profiles) are already in the DB.
+DO $$
+DECLARE clean_solana int;
+BEGIN
+  SELECT count(*) INTO clean_solana
+    FROM profiles p
+   WHERE p.status = 'approved'
+     AND 'chain:solana' = ANY (p.tags)
+     AND NOT EXISTS (SELECT 1 FROM unnest(p.tags) t WHERE t LIKE 'batch-%');
+  IF clean_solana < 400 THEN
+    RAISE EXCEPTION
+      'ABORT 05_repair_v3: only % clean chain:solana profiles present (need >= 400). Apply outputs/enrich-v4/APPLY_ALL.sql first, then re-run this file.',
+      clean_solana;
+  END IF;
+END $$;
+
 -- provenance for the polluted profiles' responses
 DELETE FROM provenance
  WHERE entity_type = 'profile_scenario_response'
