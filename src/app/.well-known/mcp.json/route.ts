@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 // Keep in sync with mcp/package.json + mcp/server.json (bumped together by the
 // publish-mcp workflow's version guard).
-const MCP_VERSION = '0.1.2';
+const MCP_VERSION = '0.1.3';
 
 export async function GET(req: Request) {
   // Derive the origin from the request (same convention as /api/v1/discovery)
