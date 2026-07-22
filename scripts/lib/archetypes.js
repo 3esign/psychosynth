@@ -147,6 +147,23 @@ const FRESH = [
     dark_triad: { narcissism: 0.68 } },
   { key: 'startup-operator', name: 'Startup Operator / Chief of Staff', domain: 'workplace', segment: 'general', weight: 1,
     tags: ['operator', 'chief-of-staff', 'generalist'], big_five: b(0.70, 0.82, 0.60, 0.55, 0.40), lambda: 2.1, system: 'system2', crt: 2, decision_style: 'analytical' },
+
+  // --- Doppler v4 bonding-curve "exit psychology" (deepening, 2026-07-22) ---
+  { key: 'doppler-curve-exit-panic', name: 'Doppler Curve-Exit Panic Seller', domain: 'trading', segment: 'panic-seller', weight: 2,
+    tags: ['robinhood', 'retail-trading', 'doppler', 'bonding-curve', 'curve-exit', 'loss-averse'], big_five: b(0.58, 0.34, 0.60, 0.58, 0.85), lambda: 3.6, system: 'system1', crt: 0, decision_style: 'avoidant' },
+  { key: 'doppler-migration-holder', name: 'Doppler Migration-Day Holder', domain: 'trading', segment: 'conservative-hodler', weight: 2,
+    tags: ['robinhood', 'retail-trading', 'doppler', 'bonding-curve', 'migration', 'endowment-effect'], big_five: b(0.55, 0.60, 0.48, 0.66, 0.55), lambda: 2.9, system: 'system1', crt: 1, decision_style: 'dependent' },
+  { key: 'doppler-graduation-dumper', name: 'Doppler Graduation Dumper', domain: 'trading', segment: 'base', weight: 2,
+    tags: ['chain:base', 'doppler', 'bonding-curve', 'graduation', 'degen'], big_five: b(0.90, 0.32, 0.80, 0.28, 0.58), lambda: 0.9, system: 'system1', crt: 1, decision_style: 'spontaneous' },
+  { key: 'doppler-multicurve-rotator', name: 'Doppler Multicurve Rotator', domain: 'trading', segment: 'base', weight: 2,
+    tags: ['chain:base', 'doppler', 'bonding-curve', 'multicurve', 'rotator'], big_five: b(0.88, 0.55, 0.70, 0.35, 0.45), lambda: 1.2, system: 'system2', crt: 2, decision_style: 'analytical' },
+
+  // --- Extra x402 agent-to-agent negotiators (deepening) ---
+  { key: 'x402-volume-negotiator', name: 'x402 Volume-Discount Negotiator', domain: 'negotiation', segment: 'agent', weight: 2,
+    tags: ['x402', 'a2a', 'agent-counterparty', 'volume-discount'], big_five: b(0.72, 0.88, 0.48, 0.34, 0.28), lambda: 1.9, system: 'system2', crt: 3, decision_style: 'analytical',
+    dark_triad: { machiavellianism: 0.8 } },
+  { key: 'x402-sla-enforcer', name: 'x402 SLA Enforcer', domain: 'negotiation', segment: 'agent', weight: 1,
+    tags: ['x402', 'a2a', 'agent-counterparty', 'sla', 'reliability'], big_five: b(0.55, 0.95, 0.35, 0.32, 0.30), lambda: 2.8, system: 'system2', crt: 3, decision_style: 'deliberative' },
 ];
 
 const ARCHETYPES = [...LEGACY, ...FRESH];

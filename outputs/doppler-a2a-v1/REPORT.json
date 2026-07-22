@@ -1,0 +1,18 @@
+{
+  "profiles": 1300,
+  "doppler": 900,
+  "agent": 400,
+  "scenarios": 72,
+  "responses": 2280,
+  "distinctSummaryRatio": 1,
+  "batchTagged": 0,
+  "badTag": 0,
+  "schemaViolations": 0,
+  "robinhoodPackEligibleDoppler": 451,
+  "meanNeuroticismByPostureBucket": {
+    "calculating": 0.26,
+    "cautious": 0.534,
+    "impulsive": 0.773,
+    "bold": 0.527
+  }
+}

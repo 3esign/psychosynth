@@ -55,10 +55,25 @@ psql "$DATABASE_URL" -f outputs/enrich-v4/05_repair_v3.sql
 **API fix**
 - `supabase/migrations/0021_*` fixes the cognitive-bias-simulator preview 500.
 
+## Post-deploy smoke test
+
+After the Vercel deploy is live and the DB steps are applied, run the read-only
+smoke test — it hits discovery, the products catalog, all 5 previews, and the
+eval battery, and asserts each returns 200 with a sane shape (including that the
+cognitive-bias preview serves populated `examples`/`mitigations` — the 500
+regression guard):
+
+```bash
+bash scripts/smoke.sh
+# against a preview deployment:
+PSYCHOSYNTH_BASE_URL=https://your-preview.vercel.app bash scripts/smoke.sh
+```
+
+Exit 0 = all green. Any non-200 or shape failure prints `FAIL` and exits 1.
+
 ## Pre-flight checklist
 
 - [ ] `bash scripts/publish.sh` gates pass locally
 - [ ] Vercel env vars set (Supabase keys, `X402_*`, Upstash) — see `.env.example`
 - [ ] DB steps 1–3 applied to the production database
-- [ ] `curl -sS https://psychosynth.vercel.app/api/v1/preview/cognitive-bias-simulator | jq .count` returns 20 (500 fixed)
-- [ ] `curl -sS https://psychosynth.vercel.app/api/v1/discovery | jq '.products|length'` looks right
+- [ ] `bash scripts/smoke.sh` returns ALL CHECKS PASSED after deploy
