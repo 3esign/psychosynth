@@ -15,7 +15,8 @@
     "export:sft": "npx tsx scripts/export-sft.ts",
     "export:dpo": "npx tsx scripts/export-dpo.ts",
     "export:reject-cls": "npx tsx scripts/export-reject-cls.ts",
-    "export:demand": "npx tsx scripts/export-demand.ts"
+    "export:demand": "npx tsx scripts/export-demand.ts",
+    "apply-data": "node scripts/apply-data.mjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.12",
