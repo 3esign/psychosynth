@@ -1,0 +1,21 @@
+{
+  "profiles": 1000,
+  "scenarios": 24,
+  "responses": 3000,
+  "distinctSummaryRatio": 1,
+  "batchTagged": 0,
+  "badTag": 0,
+  "schemaViolations": 0,
+  "meanNeuroticismByPostureBucket": {
+    "impulsive": 0.529,
+    "bold": 0.427,
+    "cautious": 0.454,
+    "calculating": 0.361
+  },
+  "tagsPinned": [
+    "social-cascade",
+    "copy-trading",
+    "farcaster",
+    "meme-rotator"
+  ]
+}

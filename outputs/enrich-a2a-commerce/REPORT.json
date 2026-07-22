@@ -1,0 +1,19 @@
+{
+  "profiles": 1000,
+  "scenarios": 48,
+  "responses": 3000,
+  "distinctSummaryRatio": 1,
+  "batchTagged": 0,
+  "badTag": 0,
+  "schemaViolations": 0,
+  "meanNeuroticismByPostureBucket": {
+    "calculating": 0.256,
+    "cautious": 0.395
+  },
+  "tagsPinned": [
+    "a2a-commerce",
+    "skill-pricing",
+    "retry-etiquette",
+    "sla-dispute"
+  ]
+}

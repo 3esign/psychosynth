@@ -1,0 +1,23 @@
+{
+  "profiles": 1000,
+  "scenarios": 24,
+  "responses": 3000,
+  "distinctSummaryRatio": 1,
+  "batchTagged": 0,
+  "badTag": 0,
+  "schemaViolations": 0,
+  "meanNeuroticismByPostureBucket": {
+    "impulsive": 0.765,
+    "bold": 0.532,
+    "calculating": 0.278,
+    "cautious": 0.551
+  },
+  "tagsPinned": [
+    "robinhood",
+    "retail-trading",
+    "doppler",
+    "launch-day",
+    "sniper",
+    "bundler"
+  ]
+}
