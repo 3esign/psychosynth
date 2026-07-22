@@ -33,6 +33,14 @@ export default async function DocsPage() {
               <p className="font-sans text-slate-400 mt-1">Free. Deterministic sample (lowest content hashes — stable across calls, so you can verify we are not cherry-picking). Rate limited to 60 req/min per IP.</p>
             </div>
             <div className="p-4 bg-slate-900 rounded-xl border border-slate-800">
+              <span className="text-emerald-400">GET /api/v1/eval/:slug</span>
+              <p className="font-sans text-slate-400 mt-1">Free. Fetch behavioral eval battery scenarios, prompt descriptions, and scoring rubric (e.g. <code className="text-indigo-300">robinhood-stress-battery</code>, <code className="text-indigo-300">a2a-commerce-battery</code>).</p>
+            </div>
+            <div className="p-4 bg-slate-900 rounded-xl border border-slate-800">
+              <span className="text-purple-400">POST /api/v1/eval/:slug</span>
+              <p className="font-sans text-slate-400 mt-1">Paid via x402 ($2.00 USDC flat). Submit your agent's scenario responses to receive a signed behavioral certification report card with per-dimension susceptibility scores.</p>
+            </div>
+            <div className="p-4 bg-slate-900 rounded-xl border border-slate-800">
               <span className="text-indigo-400">GET /api/v1/query/:slug</span>
               <p className="font-sans text-slate-400 mt-1">Paid via x402. Full records with filter support. Add <code className="text-emerald-400">?tier=&lt;pack&gt;</code> to buy a bulk pack (many records in one paid call) where offered — the 402 quote lists available tiers.</p>
             </div>

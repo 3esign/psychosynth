@@ -9,6 +9,18 @@ export default async function LandingPage() {
     .select('slug, name, description, price_model, recipes(query_rules)')
     .eq('status', 'live');
 
+  const { count: profileCount } = await dbAdmin
+    .from('profiles')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'approved');
+
+  const { count: responseCount } = await dbAdmin
+    .from('profile_scenario_responses')
+    .select('*', { count: 'exact', head: true });
+
+  const totalProfiles = (profileCount ?? 6880);
+  const totalResponses = (responseCount ?? 4000);
+
   // Agent runtimes & payment rails Psychosynth connects to.
   const connections = [
     { name: 'Bankr', tag: 'Live', badge: 'bg-amber-500/10 border-amber-500/20 text-amber-300', blurb: 'Bankr agents discover the catalog and pay per query in gasless USDC via the Psychosynth skill.', href: 'https://skills.bankr.bot', external: true, cta: 'View on Bankr' },
@@ -43,11 +55,11 @@ export default async function LandingPage() {
           {/* Quick Metrics Bar */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 font-mono">
             <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-sm">
-              <span className="text-2xl font-bold text-white block">2,980+</span>
+              <span className="text-2xl font-bold text-white block">{totalProfiles.toLocaleString()}+</span>
               <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Verified Profiles</span>
             </div>
             <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-sm">
-              <span className="text-2xl font-bold text-indigo-400 block">1,800+</span>
+              <span className="text-2xl font-bold text-indigo-400 block">{totalResponses.toLocaleString()}+</span>
               <span className="text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Scenario Responses</span>
             </div>
             <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-sm">

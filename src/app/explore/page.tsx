@@ -138,7 +138,7 @@ export default function Explore() {
         <div className="space-y-1 max-w-2xl">
           <h1 className="text-3xl font-extrabold tracking-tight text-white">Explore &amp; Compare Corpus</h1>
           <p className="text-sm text-slate-400 leading-relaxed">
-            Slice 3,080+ psychometric profiles and 3,400+ scenario responses. Use dual-thumb controls to bound traits, compare profiles side-by-side, or launch an archetype into the live simulation floor.
+            Slice 6,880+ psychometric profiles and 4,000+ scenario responses. Use dual-thumb controls to bound traits, compare profiles side-by-side, or launch an archetype into the live simulation floor.
           </p>
         </div>
 
