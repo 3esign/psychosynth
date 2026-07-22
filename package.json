@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node -e \"require('fs').copyFileSync('integrations/bankr-skills/psychosynth/psychosynth.mjs','public/psychosynth.mjs')\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

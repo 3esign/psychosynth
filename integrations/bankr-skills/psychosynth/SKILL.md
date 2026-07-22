@@ -258,3 +258,12 @@ node psychosynth.mjs personalize
 Same behavior as the bash workflows (free preview by default; set `X_PAYMENT`
 for the paid path where noted). This is the recommended entrypoint for the Bankr
 runtime and any sandbox where the `jq` binary isn't guaranteed.
+
+If `psychosynth.mjs` is not present in your installed copy of this skill,
+fetch the canonical copy served by the API itself (also advertised as
+`endpoints.runner` in `/api/v1/discovery`):
+
+```bash
+curl -fsSL -o psychosynth.mjs "$PSYCHOSYNTH_BASE_URL/psychosynth.mjs"
+node psychosynth.mjs discovery
+```

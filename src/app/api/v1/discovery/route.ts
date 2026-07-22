@@ -70,8 +70,16 @@ export async function GET(req: Request) {
       evaluations = [];
     }
 
-    const evmPayTo = process.env.X402_PAYOUT_ADDRESS || null;
-    const solanaPayTo = process.env.SOLANA_PAYOUT_ADDRESS || null;
+    // Treat unset OR obvious placeholder values (e.g. the .env.example
+    // "replace_with_your_solana_wallet_address" copied into a deploy env) as
+    // "not configured" — never advertise a non-address as payTo to agents.
+    const realAddress = (v?: string | null): string | null => {
+      const s = (v || '').trim();
+      if (!s || /replace[_-]?with|your[_-]?(wallet|address)|changeme|example/i.test(s)) return null;
+      return s;
+    };
+    const evmPayTo = realAddress(process.env.X402_PAYOUT_ADDRESS);
+    const solanaPayTo = realAddress(process.env.SOLANA_PAYOUT_ADDRESS);
 
     return NextResponse.json({
       service: 'psychosynth',
@@ -84,6 +92,11 @@ export async function GET(req: Request) {
         preview: `${origin}/api/v1/preview/{slug}`,
         query: `${origin}/api/v1/query/{slug}`,
         eval: `${origin}/api/v1/eval/{battery}`,
+        // Canonical, always-available copy of the zero-dependency Node runner
+        // (synced into public/ at build time). Agents whose skill install is
+        // missing psychosynth.mjs can fetch it from here — never from a Git
+        // branch that may not exist.
+        runner: `${origin}/psychosynth.mjs`,
       },
       payment: {
         protocol: 'x402',
