@@ -259,6 +259,7 @@ async function verifyBaseEip3009(
   requiredUnits: bigint,
   payTo: string,
   resourceUrl: string,
+  discovery?: PaymentDiscovery,
 ): Promise<{ buyerWallet: string; txHash: string }> {
   if (!facilitatorEnabled) {
     throw new PaymentError(
@@ -287,13 +288,18 @@ async function verifyBaseEip3009(
     throw new PaymentError('invalid', 'Authorization not yet valid (validAfter is in the future)');
   }
 
+  // These requirements are what the facilitator — and, for CDP, the Bazaar
+  // index — actually sees. Carry the human description and the discovery
+  // outputSchema from the quote so the cataloged entry matches what we
+  // advertise on the 402 (see bazaar.ts).
   const requirements = buildPaymentRequirements({
     network: 'base',
     payTo,
     asset: usdcContractAddress,
     requiredUnits,
     resource: resourceUrl,
-    description: 'Psychosynth x402 query',
+    description: discovery?.description || 'Psychosynth x402 query',
+    outputSchema: discovery?.outputSchema,
   });
 
   const verified = await facilitatorVerify('base', payload, requirements);
@@ -315,13 +321,14 @@ async function verifyBasePayment(
   payTo: string,
   resourcePath: string,
   resourceUrl?: string,
+  discovery?: PaymentDiscovery,
 ): Promise<{ buyerWallet: string; txHash: string }> {
   // Route between the two settlement models. An authorization-shaped payload
   // is the standard x402 flow (we settle); a txHash-shaped payload is the
   // self-settled flow (the agent already settled). Ambiguity fails closed as
   // malformed inside each verifier.
   if (looksLikeEip3009Payload(payload)) {
-    return verifyBaseEip3009(payload, requiredUnits, payTo, resourceUrl || resourcePath);
+    return verifyBaseEip3009(payload, requiredUnits, payTo, resourceUrl || resourcePath, discovery);
   }
 
   const txHash = payload?.txHash;
@@ -472,16 +479,26 @@ async function verifySolanaPayment(
 // Entry point
 // ---------------------------------------------------------------------------
 
+// What the endpoint advertises about itself, forwarded into the facilitator's
+// PaymentRequirements on the eip3009 path so CDP's Bazaar index catalogs the
+// same description/schema the 402 quote shows. Optional everywhere: omitting it
+// changes nothing about verification.
+export interface PaymentDiscovery {
+  description?: string;
+  outputSchema?: Record<string, unknown>;
+}
+
 export async function verifyPayment(args: {
   network: string;
   payload: any;
   requiredUnits: bigint;
   resourcePath: string;
   resourceUrl?: string;
+  discovery?: PaymentDiscovery;
 }): Promise<{ buyerWallet: string; txHash: string }> {
-  const { network, payload, requiredUnits, resourcePath, resourceUrl } = args;
+  const { network, payload, requiredUnits, resourcePath, resourceUrl, discovery } = args;
   if (requiredUnits <= BigInt(0)) throw new PaymentError('misconfig', 'Server price is not configured');
-  if (network === 'base') return verifyBasePayment(payload, requiredUnits, evmPayoutAddress, resourcePath, resourceUrl);
+  if (network === 'base') return verifyBasePayment(payload, requiredUnits, evmPayoutAddress, resourcePath, resourceUrl, discovery);
   if (network === 'solana') return verifySolanaPayment(payload, requiredUnits, solanaPayoutAddress, resourcePath);
   throw new PaymentError('unsupported', 'Unsupported network');
 }

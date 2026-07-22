@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { declareDiscoveryExtension } from '@x402/extensions/bazaar';
+import { queryBazaarDiscovery } from '@/modules/commerce/bazaar';
 import { dbAdmin } from '@/modules/core/db';
 import { emit } from '@/modules/learning/events';
 import { rateLimit, clientIp } from '@/modules/core/rate_limiter';
@@ -100,28 +100,11 @@ export async function proxy(request: NextRequest) {
 
     const xPayment = request.headers.get('X-PAYMENT');
 
-    const bazaarExtension = declareDiscoveryExtension({
-      inputSchema: {
-        properties: {
-          limit: { type: "number", description: "Number of records to return" },
-          tags: { type: "string", description: "Comma-separated list of tags to filter by" },
-          decision_style: { type: "string", description: "Filter by decision style (e.g. data_driven, intuitive)" },
-          mbti_label: { type: "string", description: "Filter by MBTI personality type (e.g. INTJ, ENFP)" }
-        }
-      },
-      output: {
-        example: {
-          data: [
-            {
-              id: "00000000-0000-0000-0000-000000000000",
-              slug: slug,
-              tags: ["example"],
-              created_at: "2026-01-01T00:00:00Z"
-            }
-          ]
-        }
-      }
-    });
+    // Shared Bazaar discovery metadata (see modules/commerce/bazaar.ts):
+    // `extensions` (v2) goes on the 402 body for crawlers/v2 clients;
+    // `outputSchema` (v1) rides the accepts[] entry AND the facilitator
+    // requirements at settle time — the path CDP actually indexes from.
+    const bazaar = queryBazaarDiscovery(slug);
 
     const paymentQuote = {
       x402Version: 1,
@@ -141,6 +124,8 @@ export async function proxy(request: NextRequest) {
           // sign against; assetTransferMethod tells agents which signing
           // primitive this entry expects (Capacitr-style ecosystem hint).
           extra: { name: 'USD Coin', version: '2', assetTransferMethod: 'eip3009' },
+          // v1 Bazaar discovery info — only on the Base entry (the one CDP settles).
+          outputSchema: bazaar.outputSchema,
         },
         ...(solanaPayoutAddress ? [{
           scheme: 'exact',
@@ -177,9 +162,7 @@ export async function proxy(request: NextRequest) {
             note: 'Sign the newline-separated challenge (values filled in) with the wallet that sent the payment, then include { payer, signature } next to txHash in the X-PAYMENT payload. payer must equal the paying wallet.',
           }
         : { required: false },
-      extensions: {
-        ...bazaarExtension
-      }
+      extensions: bazaar.extensions,
     };
 
     if (!xPayment) {
@@ -208,6 +191,9 @@ export async function proxy(request: NextRequest) {
         requiredUnits,
         resourcePath,
         resourceUrl: request.url,
+        // Forwarded into the facilitator requirements so CDP's Bazaar index
+        // catalogs the same description/schema the 402 quote advertises.
+        discovery: { description: quoteDescription, outputSchema: bazaar.outputSchema },
       });
 
       // Atomic reservation + replay guard. The unique index on payment_sig

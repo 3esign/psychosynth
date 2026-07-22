@@ -215,4 +215,34 @@ describe('verifyPayment eip3009 routing (local guards, no facilitator round-trip
     ]);
     await expect(verifyPayment({ ...base, payload: validPayload() })).rejects.toMatchObject({ kind: 'invalid' });
   });
+
+  it('forwards discovery metadata into the facilitator requirements (Bazaar indexes at settle)', async () => {
+    const tx = '0x' + '34'.repeat(32);
+    const fn = stubFetchOnce([
+      { json: { isValid: true, payer: ADDR_FROM } },
+      { json: { success: true, transaction: tx, payer: ADDR_FROM } },
+    ]);
+    const outputSchema = { input: { type: 'http', method: 'GET' }, output: { type: 'json' } };
+    await verifyPayment({
+      ...base,
+      payload: validPayload(),
+      discovery: { description: 'Product X — per query', outputSchema },
+    });
+    for (const call of fn.mock.calls) {
+      const body = JSON.parse(call[1].body);
+      expect(body.paymentRequirements.description).toBe('Product X — per query');
+      expect(body.paymentRequirements.outputSchema).toEqual(outputSchema);
+    }
+  });
+
+  it('omits outputSchema from requirements when no discovery is provided', async () => {
+    const tx = '0x' + '56'.repeat(32);
+    const fn = stubFetchOnce([
+      { json: { isValid: true, payer: ADDR_FROM } },
+      { json: { success: true, transaction: tx, payer: ADDR_FROM } },
+    ]);
+    await verifyPayment({ ...base, payload: validPayload() });
+    const body = JSON.parse(fn.mock.calls[0][1].body);
+    expect('outputSchema' in body.paymentRequirements).toBe(false);
+  });
 });

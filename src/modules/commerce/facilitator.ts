@@ -14,6 +14,14 @@
 // validators plus a thin HTTP client that returns discriminated results.
 // payment-verify.ts owns the mapping to PaymentError and the fail-closed
 // policy — nothing is ever served unless /settle reports on-chain success.
+//
+// Bazaar indexing rides on this client: CDP catalogs an endpoint the first
+// time it settles a payment for it, from the PaymentRequirements we send —
+// hence the optional `outputSchema` (v1 discovery info, built in bazaar.ts).
+// CDP also requires an API key (JWT auth, see cdp-auth.ts); the default PayAI
+// facilitator needs neither and ignores both.
+
+import { cdpAuthHeaders, cdpAuthConfigured } from './cdp-auth';
 
 // ---------------------------------------------------------------------------
 // Config
@@ -25,6 +33,16 @@
 export const facilitatorUrl = (
   process.env.X402_FACILITATOR_URL || 'https://facilitator.payai.network'
 ).replace(/\/+$/, '');
+
+// Pointing at CDP without API keys means every /settle 401s and every
+// standard-x402 payment fails closed. Refuse to be silent about it.
+if (facilitatorUrl.includes('api.cdp.coinbase.com') && !cdpAuthConfigured) {
+  console.error(
+    '[facilitator] X402_FACILITATOR_URL points at the CDP facilitator but CDP_API_KEY_ID / ' +
+    'CDP_API_KEY_SECRET are not set — CDP requires JWT auth on mainnet, so settlement WILL fail ' +
+    'and paid queries will be refused. Set the keys (Ed25519 secret) or revert to the PayAI default.',
+  );
+}
 
 // EIP-3009 settlement is ON by default (it is what makes the API payable by
 // standard x402 clients). Set X402_FACILITATOR_ENABLED=false to refuse
@@ -96,6 +114,10 @@ export interface PaymentRequirements {
   maxTimeoutSeconds: number;
   asset: string;
   extra: { name: string; version: string };
+  // x402 v1 discovery field (optional): the Bazaar DiscoveryInfo object. CDP
+  // reads this at settle time to index the endpoint; other facilitators ignore
+  // it. Built by bazaar.ts — never hand-write it (the shape is validated).
+  outputSchema?: Record<string, unknown>;
 }
 
 export function buildPaymentRequirements(p: {
@@ -105,6 +127,7 @@ export function buildPaymentRequirements(p: {
   requiredUnits: bigint;
   resource: string;
   description: string;
+  outputSchema?: Record<string, unknown>;
 }): PaymentRequirements {
   return {
     scheme: 'exact',
@@ -117,6 +140,7 @@ export function buildPaymentRequirements(p: {
     maxTimeoutSeconds: 86400,
     asset: p.asset,
     extra: { name: 'USD Coin', version: '2' },
+    ...(p.outputSchema ? { outputSchema: p.outputSchema } : {}),
   };
 }
 
@@ -142,9 +166,14 @@ function envelope(network: string, payload: Eip3009Payload) {
 
 async function post(path: string, body: unknown): Promise<{ status: number; json: any } | null> {
   try {
-    const res = await fetch(`${facilitatorUrl}${path}`, {
+    // CDP's facilitator requires a per-request JWT (empty {} for facilitators
+    // that need no auth, e.g. the PayAI default). Computed from the FINAL url
+    // so the signed `uris` claim matches what CDP sees.
+    const url = new URL(`${facilitatorUrl}${path}`);
+    const auth = await cdpAuthHeaders('POST', url.host, url.pathname);
+    const res = await fetch(url.toString(), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...auth },
       body: JSON.stringify(body),
     });
     let json: any = null;

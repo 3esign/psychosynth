@@ -1,4 +1,13 @@
-name: Publish to MCP Registry
+name: Publish MCP server (npm + MCP Registry)
+
+# Fires on version tags (v0.1.2, …). Order matters: the MCP Registry validates
+# ownership by fetching the *published* npm package and checking its `mcpName`
+# field matches server.json's `name` — so npm publish MUST succeed first, and
+# mcp/package.json + mcp/server.json versions must both equal the tag's version.
+#
+# Requires the NPM_TOKEN repo secret (npm automation token with publish rights
+# to `psychosynth-mcp`). The registry step needs no secret: `login github-oidc`
+# proves the io.github.3esign/* namespace via the workflow's OIDC token.
 
 on:
   push:
@@ -18,15 +27,36 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Guard — tag matches package + server.json versions
+        working-directory: mcp
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG=$(node -p "require('./package.json').version")
+          SRV=$(node -p "require('./server.json').version")
+          SRVPKG=$(node -p "require('./server.json').packages[0].version")
+          if [ "$TAG" != "$PKG" ] || [ "$TAG" != "$SRV" ] || [ "$TAG" != "$SRVPKG" ]; then
+            echo "Version mismatch: tag=$TAG package.json=$PKG server.json=$SRV/$SRVPKG" >&2
+            exit 1
+          fi
+
+      - name: Build & publish to npm
+        working-directory: mcp
+        run: |
+          npm ci
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Install MCP Publisher CLI
         run: |
           curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" | tar xz
           chmod +x mcp-publisher
 
-      - name: Authenticate & Publish
+      - name: Publish to MCP Registry
+        working-directory: mcp
         run: |
-          # The publisher automatically picks up mcp/server.json or server.json in the repo
-          ./mcp-publisher login github-oidc
-          ./mcp-publisher publish --config mcp/server.json
+          ../mcp-publisher login github-oidc
+          ../mcp-publisher publish

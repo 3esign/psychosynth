@@ -25,7 +25,8 @@ and execute.
 - `BASE_RPC_URL` — a dedicated RPC (Alchemy/QuickNode). The public `mainnet.base.org` rate-limits under real traffic and will cause intermittent 503s on settlement.
 
 **Optional**
-- `X402_FACILITATOR_URL` — defaults to PayAI's free public facilitator (Base mainnet, no key, it pays gas). Override only for Coinbase CDP.
+- `X402_FACILITATOR_URL` — defaults to PayAI's free public facilitator (Base mainnet, no key, it pays gas).
+- **Bazaar indexing (optional):** to get indexed in Coinbase's x402 Bazaar, settle through the CDP facilitator instead: set `X402_FACILITATOR_URL=https://api.cdp.coinbase.com/platform/v2/x402` **plus** `CDP_API_KEY_ID` and `CDP_API_KEY_SECRET` (an **Ed25519** Secret API key from the CDP portal). CDP requires JWT auth on mainnet — pointing the URL at CDP **without** the keys makes every settle 401 and every standard-x402 payment fail (the server logs a loud warning at boot). Auth is implemented dependency-free in `src/modules/commerce/cdp-auth.ts`.
 - `SOLANA_PAYOUT_ADDRESS` + `SOLANA_RPC_URL` — only if you accept the self-settled Solana path.
 - `EVAL_USE_LLM_JUDGE=true` + a provider key (`OPENROUTER_API_KEY` or `ANTHROPIC_API_KEY`) — upgrades the `robinhood-stress-battery` scorer from the free deterministic one to the LLM judge. The buyer pays before scoring, so it stays revenue-positive.
 
@@ -131,10 +132,10 @@ and pay $0 gas.
 ## Go-live checklist
 
 - [ ] Prod env vars set (esp. real `X402_PAYOUT_ADDRESS` + Upstash)
-- [ ] `X402_FACILITATOR_URL` pointing to Coinbase CDP if initial indexing is desired
+- [ ] For Bazaar indexing only: `X402_FACILITATOR_URL` → CDP **and** `CDP_API_KEY_ID`/`CDP_API_KEY_SECRET` set (never the URL alone — settle 401s without the keys)
 - [ ] `bash scripts/publish.sh` → deployed
 - [ ] DB migrations + data applied
 - [ ] `bash scripts/smoke.sh` → ALL CHECKS PASSED
-- [ ] Verify `extensions.bazaar` metadata on the 402 response locally (curl `/api/v1/query/personality-profile-library`)
-- [ ] `npm run buyer-test` → 200 + Basescan settlement tx to your wallet (triggers Bazaar indexing on CDP facilitator)
+- [ ] Verify discovery metadata locally: the 402 response carries `extensions.bazaar` AND `accepts[0].outputSchema` (curl `/api/v1/query/personality-profile-library`); `npm test` gates both against the `@x402/extensions` validator
+- [ ] `npm run buyer-test` → 200 + Basescan settlement tx to your wallet (with CDP configured, this first settle is what triggers Bazaar indexing — the index reads the `outputSchema` we send to /settle, not our 402 body; confirm afterwards via the Bazaar discovery API or x402scan, since CDP's `EXTENSION-RESPONSES` header has known gaps: x402 issue #2112)
 - [ ] Bankr PR merged; `install …` works; a paid Bankr prompt returns records

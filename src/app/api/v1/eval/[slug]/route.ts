@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { declareDiscoveryExtension } from '@x402/extensions/bazaar';
+import { evalBazaarDiscovery } from '@/modules/commerce/bazaar';
 import { dbAdmin } from '@/modules/core/db';
 import { err, toResponse, ApiError } from '@/modules/core/errors';
 import { emit } from '@/modules/learning/events';
@@ -167,40 +167,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
     // -- x402 gate (single flat price) ------------------------------------
     const resourcePath = url.pathname + url.search;
 
-    const bazaarExtension = declareDiscoveryExtension({
-      bodyType: "json",
-      inputSchema: {
-        properties: {
-          agent_label: { type: "string", description: "Optional agent identifier" },
-          responses: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                scenario_slug: { type: "string" },
-                response: { type: "string" }
-              },
-              required: ["scenario_slug", "response"]
-            }
-          }
-        },
-        required: ["responses"]
-      },
-      output: {
-        example: {
-          report_id: 123,
-          battery: battery.slug,
-          battery_version: battery.version,
-          agent_label: "test-agent",
-          dimension_scores: {},
-          per_scenario: [],
-          overall: {},
-          report_sha256: "hash...",
-          tx_ref: "0x...",
-          provenance: {}
-        }
-      }
-    });
+    // Shared Bazaar discovery metadata (see modules/commerce/bazaar.ts):
+    // `extensions` (v2) goes on the 402 body; `outputSchema` (v1) rides the
+    // Base accepts[] entry and the facilitator requirements at settle time —
+    // the path CDP actually indexes from.
+    const bazaar = evalBazaarDiscovery(battery.slug, battery.version);
 
     const quote = {
       x402Version: 1,
@@ -217,6 +188,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
           description: `${battery.title} — behavioral eval scoring run`,
           mimeType: 'application/json',
           extra: { name: 'USD Coin', version: '2', assetTransferMethod: 'eip3009' },
+          // v1 Bazaar discovery info — only on the Base entry (the one CDP settles).
+          outputSchema: bazaar.outputSchema,
         },
         ...(solanaPayoutAddress ? [{
           scheme: 'exact',
@@ -238,9 +211,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
       binding: bindingRequired
         ? { required: true, appliesTo: 'txhash settlements only', algo: { base: 'eip191-personal-sign', solana: 'ed25519' }, challenge: bindingChallengeTemplate }
         : { required: false },
-      extensions: {
-        ...bazaarExtension
-      }
+      extensions: bazaar.extensions,
     };
 
     const xPayment = req.headers.get('X-PAYMENT');
@@ -260,6 +231,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
 
     const { buyerWallet, txHash } = await verifyPayment({
       network, payload, requiredUnits, resourcePath, resourceUrl: req.url,
+      // Forwarded into the facilitator requirements so CDP's Bazaar index
+      // catalogs the same description/schema the 402 quote advertises.
+      discovery: {
+        description: `${battery.title} — behavioral eval scoring run`,
+        outputSchema: bazaar.outputSchema,
+      },
     });
 
     // Reserve the payment row (single-use). Mirror the proxy's resumable-replay

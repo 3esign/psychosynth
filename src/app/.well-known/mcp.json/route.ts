@@ -1,12 +1,24 @@
 import { NextResponse } from 'next/server';
 
-export async function GET() {
+// Keep in sync with mcp/package.json + mcp/server.json (bumped together by the
+// publish-mcp workflow's version guard).
+const MCP_VERSION = '0.1.2';
+
+export async function GET(req: Request) {
+  // Derive the origin from the request (same convention as /api/v1/discovery)
+  // so previews, forks, and self-hosted deployments never advertise another
+  // deployment's endpoints.
+  const host = req.headers.get('host') || 'localhost:3000';
+  const protocol = host.startsWith('localhost') ? 'http' : 'https';
+  const origin = `${protocol}://${host}`;
+
   const manifest = {
     name: 'Psychosynth MCP Server',
     description: 'Synthetic agent psychometrics, prospect theory decision vectors, cognitive bias models, and stress-test evaluation batteries payable via x402 on Base.',
-    version: '0.1.1',
+    version: MCP_VERSION,
     npmPackage: 'psychosynth-mcp',
-    mcpVersion: '1.0.0',
+    mcpName: 'io.github.3esign/psychosynth',
+    install: 'npx psychosynth-mcp',
     capabilities: {
       tools: [
         {
@@ -28,8 +40,8 @@ export async function GET() {
       ]
     },
     endpoints: {
-      api_base: 'https://psychosynth.vercel.app/api/v1',
-      discovery: 'https://psychosynth.vercel.app/api/v1/discovery'
+      api_base: `${origin}/api/v1`,
+      discovery: `${origin}/api/v1/discovery`
     }
   };
 

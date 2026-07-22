@@ -35,10 +35,11 @@ To connect the server locally, add this block to the client's configuration file
 The highest-leverage discovery mechanism is the **Coinbase CDP Bazaar**, a machine-readable index for agents. It has zero cost and requires no separate registration process.
 
 #### How Indexing Works
-- Psychosynth embeds `extensions.bazaar` discovery metadata in the `402 Payment Required` response returned by our endpoints (both `/api/v1/query/:slug` and `/api/v1/eval/:slug`).
-- This metadata conforms to the `@x402/extensions` spec, defining the endpoint's inputs, JSON schema, and expected outputs.
-- When an agent completes its first real payment settlement through a CDP-compatible facilitator, the facilitator automatically crawls our 402 quote, extracts the Bazaar extension metadata, and indexes our endpoint in the global Bazaar registry.
-- From then on, any agent querying the Bazaar can discover and securely interact with Psychosynth's paid products.
+- Both paid endpoints (`/api/v1/query/:slug` and `/api/v1/eval/:slug`) advertise discovery metadata in TWO places, built by one shared module (`src/modules/commerce/bazaar.ts`): the v2 `extensions.bazaar` block on the `402 Payment Required` body (for crawlers and v2 clients), and the v1 `outputSchema` field on the Base `accepts[]` entry.
+- **Indexing happens at settlement, not from the 402 body.** The CDP facilitator catalogs an endpoint the first time it settles a real payment for it — from the `PaymentRequirements` we send to `/verify` + `/settle`, which is why `payment-verify.ts` forwards the same `outputSchema` and product description there.
+- Settling through CDP requires a CDP API key (`CDP_API_KEY_ID`/`CDP_API_KEY_SECRET`, Ed25519 — see `cdp-auth.ts` and GO_LIVE.md); the default PayAI facilitator needs no key but does not feed the Bazaar index.
+- The metadata is validation-gated: `declareDiscoveryExtension` alone emits an extension its own schema rejects (missing `input.method`; `input` example must satisfy `inputSchema`). `bazaar.ts` patches both, and `bazaar.test.ts` locks it in with the package's own `validateDiscoveryExtension`.
+- After the first CDP-settled payment, confirm the listing via the Bazaar discovery API / x402scan rather than trusting the `EXTENSION-RESPONSES` response header (known gaps: x402-foundation/x402#2112).
 
 ---
 
