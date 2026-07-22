@@ -103,6 +103,24 @@ async function resolveProfileQuery(rules: any, req: URLSearchParams) {
     }
   }
 
+  // 4. Leverage Profile filters
+  for (const param of ['funding_sensitivity', 'liquidation_anxiety', 'max_leverage_comfort'] as const) {
+    for (const dir of ['min', 'max'] as const) {
+      const key = `${param}_${dir}`;
+      const val = req.get(key);
+      if (allowed.has(key) && val) {
+        const num = Number(val);
+        if (!Number.isNaN(num)) {
+          q = q.filter(`content->leverage_profile->>${param}`, dir === 'min' ? 'gte' : 'lte', num);
+        }
+      }
+    }
+  }
+  
+  if (allowed.has('deleveraging_style') && req.get('deleveraging_style')) {
+    q = q.filter('content->leverage_profile->>deleveraging_style', 'eq', req.get('deleveraging_style'));
+  }
+
   const limit = Math.min(Number(req.get('limit')) || rules.default_limit, rules.max_limit);
   const { data, error } = await q.limit(limit);
 

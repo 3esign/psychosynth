@@ -48,7 +48,7 @@ const N_SCENARIOS = parseInt(arg('scenarios', '80'), 10);
 const OUT = String(arg('out', 'outputs/enrich-v4'));
 
 // Distribution across sellable surfaces (fractions of N_PROFILES).
-const MIX = { retail: 0.30, solana: 0.20, base: 0.125, whale: 0.125, agent: 0.075, general: 0.175 };
+const MIX = { retail: 0.20, solana: 0.15, base: 0.125, whale: 0.10, agent: 0.075, perp: 0.20, general: 0.15 };
 
 // ------------------------------------------------------------- SQL helpers ---
 const sqlStr = (s) => "'" + String(s).replace(/'/g, "''") + "'";

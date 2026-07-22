@@ -41,6 +41,10 @@ const SCENARIOS = {
     ['Broken correlation pair', 'The two assets you have paired for years just diverged for no reason your model can find. Is it a glitch, a regime change, or a mistake you have not spotted yet?'],
     ['Year-end rebalance squeeze', 'Forced institutional selling is dragging a fundamentally fine name down {pct}% into the close. It is either a gift or a warning you are not seeing.'],
     ['The revenge trade', 'You just took a bad loss on a similar setup an hour ago. This new signal looks identical — is it the same mistake or the redemption arc?'],
+    ['Funding rate flip', 'The funding rate on your massive 50x long just flipped steeply negative. Holding means bleeding {pct}% of your margin daily, but closing means eating the spread in a flat market.'],
+    ['Maintenance-margin call', 'A sudden wick drops your collateral just below the maintenance margin. The position is still technically alive, but if you do not wire funds or cut size in the next {mins} minutes, the protocol liquidates it.'],
+    ['Liquidation cascade', 'A whale is getting liquidated, sending the asset price into a violent flash crash. Your limit orders are executing {pct}% below market, but the cascade might reverse any second.'],
+    ['Basis blowout', 'The spread between the perp and the spot price just blew out to historical highs. You can hold to expiration for a guaranteed convergence, or close now to stop the mark-to-market bleeding.'],
   ],
   negotiation: [
     ['Exploding offer', 'The counterparty puts a number on the table that expires in {hrs} hours — take it now or it is gone. It is below your target but above your floor.'],

@@ -31,6 +31,7 @@ export default async function LandingPage() {
     { name: 'OpenClaw', tag: 'Available', badge: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300', blurb: 'Add via MCPorter: openclaw mcp add psychosynth.', href: '/docs', external: false, cta: 'Setup' },
     { name: 'Hermes', tag: 'Available', badge: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300', blurb: 'Nous Research agents register the server over stdio in their config.', href: '/docs', external: false, cta: 'Setup' },
     { name: 'Virtuals (G.A.M.E.)', tag: 'Live', badge: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300', blurb: 'Virtuals G.A.M.E. SDK agents call Psychosynth dynamically as a custom tool.', href: '/docs', external: false, cta: 'Setup' },
+    { name: 'Uniswap v4 Hooks', tag: 'Live', badge: 'bg-pink-500/10 border-pink-500/20 text-pink-300', blurb: 'Our BehaviorAwareHook dynamically adjusts pool swap fee spreads using the swapper panic_index.', href: '/docs', external: false, cta: 'View Hook' },
   ];
 
   return (

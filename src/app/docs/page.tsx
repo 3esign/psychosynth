@@ -141,6 +141,39 @@ const { records } = await res.json();`}
         </section>
 
         <section className="space-y-4">
+          <h2 className="text-2xl font-semibold text-white border-b border-slate-800 pb-3">Smart Contract Guardian Infrastructure</h2>
+          <p className="text-slate-400 leading-relaxed">
+            Psychosynth integrates deeply with on-chain execution environments to enforce <strong>Behavioral Safety Rails</strong> for autonomous agents.
+            These on-chain modules consume cryptographic receipts from the <code className="text-indigo-400">/api/v1/eval/:slug</code> endpoint to verify an agent's behavioral stability before allowing high-risk trades.
+          </p>
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-white">1. ERC-7579 Behavioral Guard Module</h3>
+            <p className="text-slate-400 leading-relaxed">
+              A Smart Account execution guard that blocks transactions if an agent's panic or loss-aversion index exceeds safe parameters under current market volatility.
+            </p>
+            <pre className="p-4 bg-slate-900 rounded-xl border border-slate-800 text-sm text-slate-300 overflow-x-auto">
+{`// Example usage of BehavioralGuardModule
+const tx = await smartAccount.execute({
+  to: targetDEX,
+  value: 0,
+  data: swapData,
+  // Agent includes the Psychosynth panic_index and signature
+  extraData: abi.encode(panicIndex, psychosynthSignature)
+});`}
+            </pre>
+            <h3 className="text-lg font-semibold text-white">2. Uniswap v4 Behavior-Aware Hook</h3>
+            <p className="text-slate-400 leading-relaxed">
+              A custom liquidity pool hook that dynamically adjusts swap fee spreads based on the swapper's certified panic index, protecting LPs during systemic market stress.
+            </p>
+            <pre className="p-4 bg-slate-900 rounded-xl border border-slate-800 text-sm text-slate-300 overflow-x-auto">
+{`// Agent passes Psychosynth certification in hookData during swap
+const hookData = abi.encode(panicIndex, psychosynthSignature);
+await poolManager.swap(poolKey, params, hookData);`}
+            </pre>
+          </div>
+        </section>
+
+        <section className="space-y-4">
           <h2 className="text-2xl font-semibold text-white border-b border-slate-800 pb-3">Products &amp; filters</h2>
           {(products ?? []).map((p: any) => {
             const rules = Array.isArray(p.recipes) ? p.recipes[0]?.query_rules : p.recipes?.query_rules;

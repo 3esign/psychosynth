@@ -98,6 +98,36 @@ function deriveCognitive(rng, bf, anchor = {}) {
   return { system_preference, crt_score };
 }
 
+// -------------------------------------------- leverage profile --------------
+// New for perp-psychology-pack.
+function deriveLeverageProfile(rng, bf, pt, anchor = {}) {
+  const noise = () => (rng() - 0.5) * 0.1;
+  
+  let liquidation_anxiety = anchor.liquidation_anxiety != null ? anchor.liquidation_anxiety :
+    0.3 + 0.4 * hi(bf.neuroticism) + 0.1 * (pt.lambda - 1.0) - 0.2 * hi(bf.conscientiousness);
+  
+  let max_leverage_comfort = anchor.max_leverage_comfort != null ? anchor.max_leverage_comfort :
+    0.5 + 0.4 * hi(bf.openness) - 0.3 * hi(bf.neuroticism) - 0.1 * (pt.lambda - 1.0);
+    
+  let funding_sensitivity = anchor.funding_sensitivity != null ? anchor.funding_sensitivity :
+    0.4 + 0.5 * hi(bf.conscientiousness) - 0.2 * hi(bf.extraversion);
+    
+  liquidation_anxiety = r2(clamp(liquidation_anxiety + noise(), 0.05, 0.95));
+  max_leverage_comfort = r2(clamp(max_leverage_comfort + noise(), 0.05, 0.95));
+  funding_sensitivity = r2(clamp(funding_sensitivity + noise(), 0.05, 0.95));
+  
+  let deleveraging_style = anchor.deleveraging_style;
+  if (!deleveraging_style) {
+    if (bf.conscientiousness > 0.65 && liquidation_anxiety < 0.6) deleveraging_style = 'disciplined';
+    else if (liquidation_anxiety > 0.7) deleveraging_style = 'panic';
+    else if (bf.neuroticism < 0.3 && bf.conscientiousness < 0.4) deleveraging_style = 'hold-to-liquidation';
+    else deleveraging_style = 'adaptive';
+  }
+  
+  return { funding_sensitivity, liquidation_anxiety, max_leverage_comfort, deleveraging_style };
+}
+
+
 // Coherence-weighted quality score for the curation column (0..1). Rewards a
 // clear dominant trait and a decisive style; mild noise keeps it non-uniform.
 function qualityScore(rng, bf) {
@@ -169,11 +199,14 @@ function buildFullProfile(rng, opts = {}) {
   const tags = buildTags(rng, domainKey, style, bf, (arch && arch.tags) || []);
   const quality_score = qualityScore(rng, bf);
 
+  const leverage_profile = deriveLeverageProfile(rng, bf, prospect_theory, (arch && arch.leverage_profile) || {});
+
   const content = {
     big_five: bf,
     dark_triad,
     prospect_theory,
     cognitive_reflection,
+    leverage_profile,
     summary,
     decision_style: style,
     mbti_label,
@@ -199,6 +232,6 @@ function buildFullProfile(rng, opts = {}) {
 
 module.exports = {
   TRAITS, hi, lo, clamp, r2, uuid, sha256,
-  deriveDarkTriad, deriveProspectTheory, deriveCognitive, qualityScore,
+  deriveDarkTriad, deriveProspectTheory, deriveCognitive, deriveLeverageProfile, qualityScore,
   buildTags, sampleBigFive, buildFullProfile,
 };

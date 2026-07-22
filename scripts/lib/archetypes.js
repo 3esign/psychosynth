@@ -164,6 +164,19 @@ const FRESH = [
     dark_triad: { machiavellianism: 0.8 } },
   { key: 'x402-sla-enforcer', name: 'x402 SLA Enforcer', domain: 'negotiation', segment: 'agent', weight: 1,
     tags: ['x402', 'a2a', 'agent-counterparty', 'sla', 'reliability'], big_five: b(0.55, 0.95, 0.35, 0.32, 0.30), lambda: 2.8, system: 'system2', crt: 3, decision_style: 'deliberative' },
+
+  // --- Perp Trading Archetypes (perp-psychology-pack) ---
+  { key: 'perp-scalper', name: 'Perpetual DEX Scalper', domain: 'trading', segment: 'perp-scalper', weight: 3,
+    tags: ['perp-trading', 'defi-perps', 'scalper', 'high-frequency'], big_five: b(0.85, 0.40, 0.70, 0.35, 0.65), lambda: 1.1, system: 'system1', crt: 1, decision_style: 'intuitive' },
+  { key: 'funding-rate-farmer', name: 'Funding Rate Farmer', domain: 'trading', segment: 'funding-rate-farmer', weight: 2,
+    tags: ['perp-trading', 'defi-perps', 'funding-farmer', 'yield-seeker'], big_five: b(0.60, 0.88, 0.45, 0.50, 0.35), lambda: 2.2, system: 'system2', crt: 3, decision_style: 'analytical' },
+  { key: 'liquidation-hunter', name: 'Liquidation Hunter', domain: 'trading', segment: 'liquidation-hunter', weight: 2,
+    tags: ['perp-trading', 'defi-perps', 'liquidation-hunter', 'predatory-trading'], big_five: b(0.80, 0.85, 0.30, 0.25, 0.20), lambda: 1.8, system: 'system2', crt: 3, decision_style: 'analytical',
+    dark_triad: { machiavellianism: 0.85, psychopathy: 0.6 } },
+  { key: '100x-degen', name: '100x Leverage Degen', domain: 'trading', segment: '100x-degen', weight: 3,
+    tags: ['perp-trading', 'defi-perps', '100x-leverage', 'degen'], big_five: b(0.95, 0.15, 0.85, 0.30, 0.75), lambda: 0.5, system: 'system1', crt: 0, decision_style: 'spontaneous' },
+  { key: 'delta-neutral-mm', name: 'Delta-Neutral Market Maker', domain: 'trading', segment: 'delta-neutral-mm', weight: 2,
+    tags: ['perp-trading', 'defi-perps', 'market-maker', 'delta-neutral'], big_five: b(0.70, 0.95, 0.35, 0.40, 0.20), lambda: 2.5, system: 'system2', crt: 3, decision_style: 'deliberative' },
 ];
 
 const ARCHETYPES = [...LEGACY, ...FRESH];
@@ -181,6 +194,7 @@ const POOLS = {
   base: pool((a) => a.tags.includes('chain:base')),
   whale: pool((a) => a.tags.includes('crypto-whale')),
   agent: pool((a) => a.tags.includes('x402')),
+  perp: pool((a) => a.tags.includes('perp-trading')),
   general: pool((a) => a.segment === 'general' || a.tags.includes('quant-trader') || a.tags.includes('value-investor')),
   all: pool(() => true),
 };
