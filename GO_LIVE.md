@@ -68,7 +68,7 @@ DATABASE_URL='postgresql://…' bash scripts/apply-data.sh   # applies EVERYTHIN
 ## Step 4 — Verify the live surface (free, real deployment, no mock)
 
 ```bash
-bash scripts/smoke.sh          # hits the REAL psychosynth.vercel.app
+bash scripts/smoke.sh          # hits the REAL psychosynth.vercel.app (or node scripts/smoke.mjs on Windows)
 ```
 
 Expect `ALL CHECKS PASSED`: discovery, products, all 5 previews, eval battery,
