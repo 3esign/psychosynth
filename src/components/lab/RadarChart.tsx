@@ -149,7 +149,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({
           const lx = center + labelDist * Math.cos(angle);
           const ly = center + labelDist * Math.sin(angle);
 
-          let anchor = 'middle';
+          let anchor: 'end' | 'start' | 'middle' = 'middle';
           if (Math.abs(Math.cos(angle)) > 0.3) {
             anchor = Math.cos(angle) > 0 ? 'start' : 'end';
           }
