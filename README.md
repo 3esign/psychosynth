@@ -46,6 +46,13 @@ Psychosynth exposes an MCP server to connect directly with autonomous agent runt
   - `get_quote`: Request an x402 payment quote without executing transactions.
   - `query_records`: Execute on-chain payments and retrieve full data payloads.
 
+### 4. Interactive Lab OS Playground
+Psychosynth hosts an ultra-premium, dark-luxury financial dashboard for human interaction and debugging at `/playground`:
+- **Real-Time Radar Chart**: Dynamic SVG spider map showing 8 psychometric dimensions (OCEAN, Dark Triad, Prospect Theory) updating instantly as parameters change.
+- **Holographic Agent Passports**: Generates beautiful, shareable glassmorphism identity cards with automated archetype classification and direct 1-click Twitter sharing.
+- **Multi-Agent Duel Arena**: A live simulation pit where two agents with distinct profiles (e.g., Solana Degen vs. Risk-Averse Institution) negotiate a transaction, with System 1/2 reasoning streaming in real-time.
+- **x402 Protocol Inspector**: Step-by-step interactive terminal visualizing the HTTP 402 payment challenge, EIP-712 signing, Base facilitator settlement, and payload decryption.
+
 ---
 
 ## Setup & Installation
