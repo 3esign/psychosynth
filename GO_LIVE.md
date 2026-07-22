@@ -131,8 +131,10 @@ and pay $0 gas.
 ## Go-live checklist
 
 - [ ] Prod env vars set (esp. real `X402_PAYOUT_ADDRESS` + Upstash)
+- [ ] `X402_FACILITATOR_URL` pointing to Coinbase CDP if initial indexing is desired
 - [ ] `bash scripts/publish.sh` → deployed
 - [ ] DB migrations + data applied
 - [ ] `bash scripts/smoke.sh` → ALL CHECKS PASSED
-- [ ] `npm run buyer-test` → 200 + Basescan settlement tx to your wallet
+- [ ] Verify `extensions.bazaar` metadata on the 402 response locally (curl `/api/v1/query/personality-profile-library`)
+- [ ] `npm run buyer-test` → 200 + Basescan settlement tx to your wallet (triggers Bazaar indexing on CDP facilitator)
 - [ ] Bankr PR merged; `install …` works; a paid Bankr prompt returns records

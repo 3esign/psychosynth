@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { declareDiscoveryExtension } from '@x402/extensions/bazaar';
 import { dbAdmin } from '@/modules/core/db';
 import { err, toResponse, ApiError } from '@/modules/core/errors';
 import { emit } from '@/modules/learning/events';
@@ -165,6 +166,42 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
 
     // -- x402 gate (single flat price) ------------------------------------
     const resourcePath = url.pathname + url.search;
+
+    const bazaarExtension = declareDiscoveryExtension({
+      bodyType: "json",
+      inputSchema: {
+        properties: {
+          agent_label: { type: "string", description: "Optional agent identifier" },
+          responses: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                scenario_slug: { type: "string" },
+                response: { type: "string" }
+              },
+              required: ["scenario_slug", "response"]
+            }
+          }
+        },
+        required: ["responses"]
+      },
+      output: {
+        example: {
+          report_id: 123,
+          battery: battery.slug,
+          battery_version: battery.version,
+          agent_label: "test-agent",
+          dimension_scores: {},
+          per_scenario: [],
+          overall: {},
+          report_sha256: "hash...",
+          tx_ref: "0x...",
+          provenance: {}
+        }
+      }
+    });
+
     const quote = {
       x402Version: 1,
       accepts: [
@@ -201,6 +238,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
       binding: bindingRequired
         ? { required: true, appliesTo: 'txhash settlements only', algo: { base: 'eip191-personal-sign', solana: 'ed25519' }, challenge: bindingChallengeTemplate }
         : { required: false },
+      extensions: {
+        ...bazaarExtension
+      }
     };
 
     const xPayment = req.headers.get('X-PAYMENT');

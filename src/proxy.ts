@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { declareDiscoveryExtension } from '@x402/extensions/bazaar';
 import { dbAdmin } from '@/modules/core/db';
 import { emit } from '@/modules/learning/events';
 import { rateLimit, clientIp } from '@/modules/core/rate_limiter';
@@ -99,6 +100,29 @@ export async function proxy(request: NextRequest) {
 
     const xPayment = request.headers.get('X-PAYMENT');
 
+    const bazaarExtension = declareDiscoveryExtension({
+      inputSchema: {
+        properties: {
+          limit: { type: "number", description: "Number of records to return" },
+          tags: { type: "string", description: "Comma-separated list of tags to filter by" },
+          decision_style: { type: "string", description: "Filter by decision style (e.g. data_driven, intuitive)" },
+          mbti_label: { type: "string", description: "Filter by MBTI personality type (e.g. INTJ, ENFP)" }
+        }
+      },
+      output: {
+        example: {
+          data: [
+            {
+              id: "00000000-0000-0000-0000-000000000000",
+              slug: slug,
+              tags: ["example"],
+              created_at: "2026-01-01T00:00:00Z"
+            }
+          ]
+        }
+      }
+    });
+
     const paymentQuote = {
       x402Version: 1,
       accepts: [
@@ -153,6 +177,9 @@ export async function proxy(request: NextRequest) {
             note: 'Sign the newline-separated challenge (values filled in) with the wallet that sent the payment, then include { payer, signature } next to txHash in the X-PAYMENT payload. payer must equal the paying wallet.',
           }
         : { required: false },
+      extensions: {
+        ...bazaarExtension
+      }
     };
 
     if (!xPayment) {

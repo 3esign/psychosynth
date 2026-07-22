@@ -31,7 +31,18 @@ To connect the server locally, add this block to the client's configuration file
 
 ## 2. Framework-Specific Runtimes
 
-### 2.1 OpenClaw Integration
+### 2.1 x402 Bazaar (Coinbase CDP) Integration
+The highest-leverage discovery mechanism is the **Coinbase CDP Bazaar**, a machine-readable index for agents. It has zero cost and requires no separate registration process.
+
+#### How Indexing Works
+- Psychosynth embeds `extensions.bazaar` discovery metadata in the `402 Payment Required` response returned by our endpoints (both `/api/v1/query/:slug` and `/api/v1/eval/:slug`).
+- This metadata conforms to the `@x402/extensions` spec, defining the endpoint's inputs, JSON schema, and expected outputs.
+- When an agent completes its first real payment settlement through a CDP-compatible facilitator, the facilitator automatically crawls our 402 quote, extracts the Bazaar extension metadata, and indexes our endpoint in the global Bazaar registry.
+- From then on, any agent querying the Bazaar can discover and securely interact with Psychosynth's paid products.
+
+---
+
+### 2.2 OpenClaw Integration
 OpenClaw manages MCP servers via **MCPorter**. Connect the Psychosynth MCP server using one of the following methods:
 
 #### CLI Configuration
@@ -61,61 +72,7 @@ Verify the installation by running `openclaw mcp status`.
 
 ---
 
-### 2.2 ElizaOS Integration
-ElizaOS connects to MCP servers using `eliza-plugin-mcp`.
-
-1. **Add Plugin**: Ensure `@elizaos/plugin-mcp` is added to your agent's dependencies.
-2. **Character Configuration**: Reference the server inside your agent's `character.json` file:
-
-```json
-{
-  "name": "TraderAgent",
-  "plugins": ["@elizaos/plugin-mcp"],
-  "settings": {
-    "mcp": {
-      "servers": {
-        "psychosynth": {
-          "command": "node",
-          "args": ["/absolute/path/to/psychosynth/mcp/dist/index.js"],
-          "env": {
-            "PSYCHOSYNTH_API_URL": "https://your-deployment.vercel.app",
-            "BUYER_PRIVATE_KEY": "0xYourPrivateKey"
-          }
-        }
-      }
-    }
-  }
-}
-```
-
----
-
-### 2.3 Hermes Agent (Nous Research)
-Hermes Agents consume MCP servers via direct stdio bindings in their Elixir/Node.js orchestration layers.
-
-1. Add the server execution command to the Hermes `config/config.exs` or the JSON agent environment definition:
-```json
-{
-  "agent": {
-    "mcp_servers": [
-      {
-        "name": "psychosynth",
-        "command": "node",
-        "args": ["/absolute/path/to/psychosynth/mcp/dist/index.js"],
-        "env": {
-          "PSYCHOSYNTH_API_URL": "https://your-deployment.vercel.app",
-          "BUYER_PRIVATE_KEY": "0xYourPrivateKey"
-        }
-      }
-    ]
-  }
-}
-```
-2. The Hermes agent will automatically register `list_products`, `preview_records`, `get_quote`, and `query_records` into its dynamic skill list.
-
----
-
-## 3. Virtuals Protocol & G.A.M.E. Framework
+### 2.3 Virtuals Protocol & G.A.M.E. Framework
 
 Virtuals Protocol agents execute tasks on-chain using the **G.A.M.E. Framework** decision engine. To register Psychosynth as a G.A.M.E. tool:
 
@@ -144,6 +101,60 @@ Virtuals Protocol agents execute tasks on-chain using the **G.A.M.E. Framework**
 2. **Autonomous Execution Logic**:
    - The G.A.M.E. agent signs a gasless EVM transaction (EIP-3009 TransferWithAuthorization) using its on-chain wallet.
    - The payload is sent to the Vercel proxy middleware (`proxy.ts`), which settles the authorization on-chain and delivers the records in the same request loop.
+
+---
+
+### 2.4 ElizaOS Integration
+ElizaOS connects to MCP servers using `eliza-plugin-mcp`.
+
+1. **Add Plugin**: Ensure `@elizaos/plugin-mcp` is added to your agent's dependencies.
+2. **Character Configuration**: Reference the server inside your agent's `character.json` file:
+
+```json
+{
+  "name": "TraderAgent",
+  "plugins": ["@elizaos/plugin-mcp"],
+  "settings": {
+    "mcp": {
+      "servers": {
+        "psychosynth": {
+          "command": "node",
+          "args": ["/absolute/path/to/psychosynth/mcp/dist/index.js"],
+          "env": {
+            "PSYCHOSYNTH_API_URL": "https://your-deployment.vercel.app",
+            "BUYER_PRIVATE_KEY": "0xYourPrivateKey"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+### 2.5 Hermes Agent (Nous Research)
+Hermes Agents consume MCP servers via direct stdio bindings in their Elixir/Node.js orchestration layers.
+
+1. Add the server execution command to the Hermes `config/config.exs` or the JSON agent environment definition:
+```json
+{
+  "agent": {
+    "mcp_servers": [
+      {
+        "name": "psychosynth",
+        "command": "node",
+        "args": ["/absolute/path/to/psychosynth/mcp/dist/index.js"],
+        "env": {
+          "PSYCHOSYNTH_API_URL": "https://your-deployment.vercel.app",
+          "BUYER_PRIVATE_KEY": "0xYourPrivateKey"
+        }
+      }
+    ]
+  }
+}
+```
+2. The Hermes agent will automatically register `list_products`, `preview_records`, `get_quote`, and `query_records` into its dynamic skill list.
 
 ---
 

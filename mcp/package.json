@@ -1,6 +1,6 @@
 {
   "name": "psychosynth-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MCP server for the Psychosynth synthetic psychometric data marketplace \u2014 discover the catalog, fetch free deterministic previews, get x402 price quotes, and run paid queries with your own wallet.",
   "type": "module",
   "bin": {
