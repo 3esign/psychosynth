@@ -23,6 +23,7 @@ export default async function LandingPage() {
 
   // Agent runtimes & payment rails Psychosynth connects to.
   const connections = [
+    { name: 'Faces Wallet MCP', tag: 'Native', badge: 'bg-amber-500/10 border-amber-500/20 text-amber-300', blurb: 'Gives Buzz agents by Block an on-chain Base wallet to autonomously query Psychosynth over x402.', href: 'https://github.com/3esign/Faces-Wallet-MCP', external: true, cta: 'Faces Repo' },
     { name: 'Bankr', tag: 'Live', badge: 'bg-amber-500/10 border-amber-500/20 text-amber-300', blurb: 'Bankr agents discover the catalog and pay per query in gasless USDC via the Psychosynth skill.', href: 'https://skills.bankr.bot', external: true, cta: 'View on Bankr' },
     { name: 'x402-fetch', tag: 'Live', badge: 'bg-amber-500/10 border-amber-500/20 text-amber-300', blurb: 'Any agent using x402-fetch settles out of the box — no API keys, no signup.', href: '/api/v1/discovery', external: false, cta: 'Discovery' },
     { name: 'MCP', tag: 'Native', badge: 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300', blurb: 'A standard MCP server exposes list, preview, quote and query as agent tools.', href: 'https://modelcontextprotocol.io', external: true, cta: 'Learn more' },

@@ -131,7 +131,14 @@ Full architectural specifications, master plans, and developer logs reside in th
 
 ## Ecosystem & Platform Integrations
 
-### 1. Bankr Ecosystem (x402 Native)
+### 1. Faces Wallet MCP (Buzz by Block & ACP Native)
+
+Psychosynth connects directly with **Buzz by Block** agents (Goose, Codex, Claude Code) via the [Faces Wallet MCP server](https://github.com/3esign/Faces-Wallet-MCP). Agents in a Buzz workspace use their on-chain Base wallet to autonomously settle `x402` queries for psychometric data using `x402_fetch`.
+
+- **Repository**: [https://github.com/3esign/Faces-Wallet-MCP](https://github.com/3esign/Faces-Wallet-MCP)
+- **Capability**: Any Buzz agent can load the Faces MCP server, check balances, and query Psychosynth endpoints with automated EIP-3009 gasless USDC settlement up to a set spend cap.
+
+### 2. Bankr Ecosystem (x402 Native)
 
 Psychosynth speaks **standard x402**: agents sign a gasless USDC EIP-3009 `TransferWithAuthorization` on Base and the server settles it via an x402 facilitator (the facilitator broadcasts and pays gas). This is the payment shape Bankr platform wallets, `x402-fetch`, and most agent wallet layers produce automatically. Self-settled `txHash` payments (Base or Solana) remain supported as a fallback.
 

@@ -82,6 +82,37 @@ const { records } = await res.json();`}
         </section>
 
         <section className="space-y-4">
+          <h2 className="text-2xl font-semibold text-white border-b border-slate-800 pb-3">Faces Wallet MCP (Buzz by Block Agents)</h2>
+          <p className="text-slate-400 leading-relaxed">
+            Any agent running in a <strong>Buzz workspace</strong> (or using Goose, Codex, or Claude Code) can load the <strong>Faces Wallet MCP server</strong> to gain an on-chain Base wallet. The agent can then use the built-in <code className="text-indigo-400">x402_fetch</code> tool to query Psychosynth directly, settling payments in USDC automatically under a configured spend cap.
+          </p>
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold text-white">1. Add Faces Wallet to your agent configuration</h3>
+            <pre className="p-4 bg-slate-900 rounded-xl border border-slate-800 text-sm text-slate-300 overflow-x-auto">
+{`{
+  "mcpServers": {
+    "faces-wallet": {
+      "command": "node",
+      "args": ["/path/to/faces-wallet-mcp.mjs"],
+      "env": {
+        "FACES_WALLET_MODE": "local",
+        "FACES_NETWORK": "base-sepolia"
+      }
+    }
+  }
+}`}
+            </pre>
+            <h3 className="text-lg font-semibold text-white">2. Agent queries Psychosynth autonomously</h3>
+            <p className="text-slate-400 leading-relaxed">
+              When an agent calls <code className="text-indigo-400">x402_fetch</code> targeting Psychosynth endpoints, the Faces server receives the 402 challenge, signs the USDC payment payload from the agent's wallet, and delivers the psychometric records seamlessly.
+            </p>
+            <p className="text-xs text-indigo-400 font-mono">
+              Repository: <a href="https://github.com/3esign/Faces-Wallet-MCP" target="_blank" rel="noopener noreferrer" className="underline">https://github.com/3esign/Faces-Wallet-MCP</a>
+            </p>
+          </div>
+        </section>
+
+        <section className="space-y-4">
           <h2 className="text-2xl font-semibold text-white border-b border-slate-800 pb-3">Virtuals Protocol &amp; G.A.M.E. SDK</h2>
           <p className="text-slate-400 leading-relaxed">
             Autonomous agents in the Virtuals Protocol ecosystem running the <strong>G.A.M.E. Framework</strong> can integrate Psychosynth natively as a custom action tool. This requires zero setup or agent registration on your end. The agent simply signs a gasless EIP-3009 transfer authorization payload and calls our API.
