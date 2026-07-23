@@ -108,6 +108,44 @@ export default async function LandingPage() {
           </div>
         </header>
 
+        {/* Faces Wallet MCP Feature Banner */}
+        <section className="p-8 rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-slate-900/80 to-indigo-900/20 space-y-6 shadow-2xl backdrop-blur-md">
+          <div className="flex flex-col md:flex-row items-start justify-between gap-6">
+            <div className="space-y-2 max-w-2xl">
+              <span className="text-[10px] bg-amber-500/10 text-amber-300 px-2.5 py-1 rounded-full border border-amber-500/30 font-mono font-bold uppercase tracking-wider">
+                Buzz by Block Payment Rails
+              </span>
+              <h2 className="text-3xl font-extrabold tracking-tight text-white">Faces Wallet MCP Integration</h2>
+              <p className="text-sm text-slate-300 leading-relaxed font-sans">
+                Buzz makes AI agents first-class teammates with their own cryptographic identity. Faces hands any Buzz agent (Goose, Codex, Claude Code) a real on-chain Base wallet to query Psychosynth over x402 automatically under a configured spend cap.
+              </p>
+            </div>
+            <a
+              href="https://github.com/3esign/Faces-Wallet-MCP"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 inline-flex items-center justify-center px-5 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold rounded-xl shadow-lg transition-all text-xs font-mono"
+            >
+              View Faces Repo &rarr;
+            </a>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs pt-2">
+            <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800/80 space-y-2">
+              <span className="text-amber-400 font-bold block">1. Plug-and-Play MCP</span>
+              <p className="text-slate-400 font-sans text-xs leading-relaxed">Single configuration line in your Buzz workspace or agent host launches the Faces wallet server over stdio.</p>
+            </div>
+            <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800/80 space-y-2">
+              <span className="text-amber-400 font-bold block">2. On-Chain Base Treasury</span>
+              <p className="text-slate-400 font-sans text-xs leading-relaxed">Backed by Coinbase CDP server wallets or local self-custodied keys. Full balance reads, sends, and message signing.</p>
+            </div>
+            <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800/80 space-y-2">
+              <span className="text-amber-400 font-bold block">3. Autonomous x402 Settlement</span>
+              <p className="text-slate-400 font-sans text-xs leading-relaxed">The x402_fetch tool receives HTTP 402 payment quotes and settles Psychosynth queries in USDC instantly.</p>
+            </div>
+          </div>
+        </section>
+
         {/* Agent Quickstart — standard x402 + Multi-Chain rails */}
         <section className="rounded-2xl border border-indigo-500/20 bg-gradient-to-br from-indigo-500/10 via-slate-900/50 to-purple-500/10 p-8 space-y-6 shadow-2xl">
           <div className="flex flex-wrap items-start justify-between gap-4">
